@@ -1,0 +1,410 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonspdx"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn analyze_inventory(String) -> Result[InventoryStats, Diagnostic]
+
+pub fn audit(Array[Component], Policy) -> Result[AuditReport, Diagnostic]
+
+pub fn audit_inventory(String, Policy) -> Result[AuditReport, Diagnostic]
+
+pub fn canonical_inventory(String) -> Result[String, Diagnostic]
+
+pub fn catalog_stats() -> CatalogStats
+
+pub fn compile_inventory(String) -> Result[InventoryIndex, Diagnostic]
+
+pub fn demo_inventory() -> String
+
+pub fn demo_policy() -> String
+
+pub fn diff_components(Array[Component], Array[Component]) -> InventoryDiff
+
+pub fn diff_inventories(String, String) -> Result[InventoryDiff, Diagnostic]
+
+pub fn evaluate(Expression, Policy) -> Evaluation
+
+pub fn evaluate_source(String, Policy) -> Result[Evaluation, Diagnostic]
+
+pub fn execute(Array[String]) -> CommandResult
+
+pub let help_text : String
+
+pub fn inventory_stats(Array[Component]) -> Result[InventoryStats, Diagnostic]
+
+pub fn is_known_exception(String) -> Bool
+
+pub fn known_exception_ids() -> Array[String]
+
+pub fn known_license_ids() -> Array[String]
+
+pub fn lookup_license(String) -> LicenseInfo?
+
+pub fn normalize_expression(String) -> Result[String, Diagnostic]
+
+pub fn notice_plan(AuditReport) -> Result[NoticePlan, Diagnostic]
+
+pub fn parse_expression(String) -> Result[Expression, Diagnostic]
+
+pub fn parse_inventory(String) -> Result[Array[Component], Diagnostic]
+
+pub fn parse_policy(String) -> Result[Policy, Diagnostic]
+
+pub fn policy_matrix(Policy) -> PolicyMatrix
+
+pub fn render_alternative(Array[LicenseAtom]) -> String
+
+// Errors
+
+// Types and methods
+pub struct AuditReport {
+  results : Array[ComponentResult]
+  obligations : Obligations
+  accepted : Bool
+  review_count : Int
+  rejected_count : Int
+} derive(Eq, @debug.Debug)
+pub fn AuditReport::accepted(Self) -> Bool
+pub fn AuditReport::obligations(Self) -> Obligations
+pub fn AuditReport::rejected_count(Self) -> Int
+pub fn AuditReport::results(Self) -> Array[ComponentResult]
+pub fn AuditReport::review_count(Self) -> Int
+pub fn AuditReport::to_json(Self) -> String
+pub fn AuditReport::to_text(Self) -> String
+
+pub struct CatalogDecision {
+  license : LicenseInfo
+  evaluation : Evaluation
+} derive(Eq, @debug.Debug)
+pub fn CatalogDecision::evaluation(Self) -> Evaluation
+pub fn CatalogDecision::license(Self) -> LicenseInfo
+
+pub struct CatalogStats {
+  licenses : Int
+  osi_approved : Int
+  non_osi : Int
+  permissive : Int
+  weak_copyleft : Int
+  strong_copyleft : Int
+  public_domain : Int
+  other : Int
+  notice_required : Int
+  source_required : Int
+  network_source_required : Int
+  patent_notice_required : Int
+  exceptions : Int
+} derive(Eq, @debug.Debug)
+pub fn CatalogStats::exceptions(Self) -> Int
+pub fn CatalogStats::licenses(Self) -> Int
+pub fn CatalogStats::non_osi(Self) -> Int
+pub fn CatalogStats::osi_approved(Self) -> Int
+pub fn CatalogStats::permissive(Self) -> Int
+pub fn CatalogStats::strong_copyleft(Self) -> Int
+pub fn CatalogStats::to_json(Self) -> String
+pub fn CatalogStats::to_text(Self) -> String
+pub fn CatalogStats::weak_copyleft(Self) -> Int
+
+pub struct CommandResult {
+  exit_code : Int
+  output : String
+} derive(Eq, @debug.Debug)
+pub fn CommandResult::exit_code(Self) -> Int
+pub fn CommandResult::output(Self) -> String
+
+pub struct Component {
+  name : String
+  version : String
+  expression : String
+} derive(Eq, @debug.Debug)
+pub fn Component::expression(Self) -> String
+pub fn Component::name(Self) -> String
+pub fn Component::new(String, String, String) -> Self
+pub fn Component::version(Self) -> String
+
+pub struct ComponentChange {
+  name : String
+  kind : ComponentChangeKind
+  before_version : String?
+  after_version : String?
+  before_expression : String?
+  after_expression : String?
+} derive(Eq, @debug.Debug)
+pub fn ComponentChange::after_expression(Self) -> String?
+pub fn ComponentChange::after_version(Self) -> String?
+pub fn ComponentChange::before_expression(Self) -> String?
+pub fn ComponentChange::before_version(Self) -> String?
+pub fn ComponentChange::kind(Self) -> ComponentChangeKind
+pub fn ComponentChange::name(Self) -> String
+
+pub enum ComponentChangeKind {
+  Added
+  Removed
+  VersionChanged
+  LicenseChanged
+  VersionAndLicenseChanged
+  Unchanged
+} derive(Eq, @debug.Debug)
+pub fn ComponentChangeKind::name(Self) -> String
+
+pub struct ComponentResult {
+  component : Component
+  evaluation : Evaluation
+} derive(Eq, @debug.Debug)
+pub fn ComponentResult::component(Self) -> Component
+pub fn ComponentResult::evaluation(Self) -> Evaluation
+
+pub enum DecisionStatus {
+  Accepted
+  Rejected
+  Review
+} derive(Eq, @debug.Debug)
+pub fn DecisionStatus::name(Self) -> String
+
+pub struct Diagnostic {
+  code : String
+  location : String
+  message : String
+  expected : String
+  actual : String
+} derive(Eq, @debug.Debug)
+pub fn Diagnostic::actual(Self) -> String
+pub fn Diagnostic::code(Self) -> String
+pub fn Diagnostic::expected(Self) -> String
+pub fn Diagnostic::location(Self) -> String
+pub fn Diagnostic::message(Self) -> String
+pub fn Diagnostic::new(String, String, String, String, String) -> Self
+pub fn Diagnostic::to_text(Self) -> String
+
+pub struct Evaluation {
+  status : DecisionStatus
+  selected : String
+  obligations : Obligations
+  reasons : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn Evaluation::obligations(Self) -> Obligations
+pub fn Evaluation::reasons(Self) -> Array[String]
+pub fn Evaluation::selected(Self) -> String
+pub fn Evaluation::status(Self) -> DecisionStatus
+pub fn Evaluation::status_name(Self) -> String
+pub fn Evaluation::to_json(Self) -> String
+pub fn Evaluation::to_text(Self) -> String
+
+pub enum Expression {
+  Atom(LicenseAtom)
+  And(Expression, Expression)
+  Or(Expression, Expression)
+} derive(Eq, @debug.Debug)
+pub fn Expression::alternatives(Self) -> Result[Array[Array[LicenseAtom]], Diagnostic]
+pub fn Expression::atoms(Self) -> Array[LicenseAtom]
+pub fn Expression::canonical(Self) -> String
+pub fn Expression::stats(Self) -> ExpressionStats
+
+pub struct ExpressionStats {
+  atoms : Int
+  and_operators : Int
+  or_operators : Int
+  depth : Int
+  alternatives : Int
+} derive(Eq, @debug.Debug)
+pub fn ExpressionStats::alternatives(Self) -> Int
+pub fn ExpressionStats::and_operators(Self) -> Int
+pub fn ExpressionStats::atoms(Self) -> Int
+pub fn ExpressionStats::depth(Self) -> Int
+pub fn ExpressionStats::or_operators(Self) -> Int
+pub fn ExpressionStats::to_text(Self) -> String
+
+pub struct InventoryDiff {
+  changes : Array[ComponentChange]
+  added : Int
+  removed : Int
+  version_changed : Int
+  license_changed : Int
+  unchanged : Int
+} derive(Eq, @debug.Debug)
+pub fn InventoryDiff::added(Self) -> Int
+pub fn InventoryDiff::changes(Self) -> Array[ComponentChange]
+pub fn InventoryDiff::has_license_drift(Self) -> Bool
+pub fn InventoryDiff::license_changed(Self) -> Int
+pub fn InventoryDiff::removed(Self) -> Int
+pub fn InventoryDiff::to_json(Self) -> String
+pub fn InventoryDiff::to_text(Self) -> String
+pub fn InventoryDiff::unchanged(Self) -> Int
+pub fn InventoryDiff::version_changed(Self) -> Int
+
+pub struct InventoryIndex {
+  components : Array[Component]
+  expressions : Array[Expression]
+} derive(Eq, @debug.Debug)
+pub fn InventoryIndex::build(Array[Component]) -> Result[Self, Diagnostic]
+pub fn InventoryIndex::canonical(Self) -> String
+pub fn InventoryIndex::components(Self) -> Array[Component]
+pub fn InventoryIndex::find(Self, String) -> Component?
+pub fn InventoryIndex::requiring(Self, String) -> Result[Array[Component], Diagnostic]
+pub fn InventoryIndex::using_family(Self, LicenseFamily) -> Array[Component]
+pub fn InventoryIndex::using_family_name(Self, String) -> Result[Array[Component], Diagnostic]
+pub fn InventoryIndex::using_license(Self, String) -> Result[Array[Component], Diagnostic]
+
+pub struct InventoryStats {
+  components : Int
+  unique_licenses : Int
+  expression_atoms : Int
+  and_operators : Int
+  or_operators : Int
+  exceptions : Int
+  maximum_depth : Int
+  maximum_alternatives : Int
+  permissive_components : Int
+  weak_copyleft_components : Int
+  strong_copyleft_components : Int
+  public_domain_components : Int
+  other_components : Int
+  usages : Array[LicenseUsage]
+} derive(Eq, @debug.Debug)
+pub fn InventoryStats::and_operators(Self) -> Int
+pub fn InventoryStats::components(Self) -> Int
+pub fn InventoryStats::exceptions(Self) -> Int
+pub fn InventoryStats::expression_atoms(Self) -> Int
+pub fn InventoryStats::maximum_alternatives(Self) -> Int
+pub fn InventoryStats::maximum_depth(Self) -> Int
+pub fn InventoryStats::or_operators(Self) -> Int
+pub fn InventoryStats::to_json(Self) -> String
+pub fn InventoryStats::to_text(Self) -> String
+pub fn InventoryStats::unique_licenses(Self) -> Int
+pub fn InventoryStats::usages(Self) -> Array[LicenseUsage]
+
+pub struct LicenseAtom {
+  id : String
+  exception : String?
+} derive(Eq, @debug.Debug)
+pub fn LicenseAtom::canonical(Self) -> String
+pub fn LicenseAtom::exception(Self) -> String?
+pub fn LicenseAtom::id(Self) -> String
+pub fn LicenseAtom::new(String, exception? : String?) -> Self
+
+pub enum LicenseFamily {
+  Permissive
+  WeakCopyleft
+  StrongCopyleft
+  PublicDomain
+  Other
+} derive(Eq, @debug.Debug)
+pub fn LicenseFamily::name(Self) -> String
+
+pub struct LicenseInfo {
+  id : String
+  family : LicenseFamily
+  osi_approved : Bool
+  deprecated : Bool
+  obligations : Obligations
+} derive(Eq, @debug.Debug)
+pub fn LicenseInfo::family(Self) -> LicenseFamily
+pub fn LicenseInfo::id(Self) -> String
+pub fn LicenseInfo::is_deprecated(Self) -> Bool
+pub fn LicenseInfo::is_osi_approved(Self) -> Bool
+pub fn LicenseInfo::obligations(Self) -> Obligations
+
+pub struct LicenseUsage {
+  id : String
+  components : Int
+  occurrences : Int
+  family : LicenseFamily
+} derive(Eq, @debug.Debug)
+pub fn LicenseUsage::components(Self) -> Int
+pub fn LicenseUsage::family(Self) -> LicenseFamily
+pub fn LicenseUsage::id(Self) -> String
+pub fn LicenseUsage::occurrences(Self) -> Int
+
+pub struct NoticeAction {
+  component : String
+  version : String
+  selected_license : String
+  obligation : String
+} derive(Eq, @debug.Debug)
+pub fn NoticeAction::component(Self) -> String
+pub fn NoticeAction::obligation(Self) -> String
+pub fn NoticeAction::selected_license(Self) -> String
+pub fn NoticeAction::version(Self) -> String
+
+pub struct NoticePlan {
+  actions : Array[NoticeAction]
+  components : Int
+  obligation_kinds : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn NoticePlan::actions(Self) -> Array[NoticeAction]
+pub fn NoticePlan::components(Self) -> Int
+pub fn NoticePlan::obligation_kinds(Self) -> Array[String]
+pub fn NoticePlan::to_json(Self) -> String
+pub fn NoticePlan::to_text(Self) -> String
+
+pub struct Obligations {
+  notice : Bool
+  attribution : Bool
+  source_disclosure : Bool
+  same_license : Bool
+  network_source : Bool
+  patent_notice : Bool
+} derive(Eq, @debug.Debug)
+pub fn Obligations::combine(Self, Self) -> Self
+pub fn Obligations::is_empty(Self) -> Bool
+pub fn Obligations::make(notice? : Bool, attribution? : Bool, source_disclosure? : Bool, same_license? : Bool, network_source? : Bool, patent_notice? : Bool) -> Self
+pub fn Obligations::names(Self) -> Array[String]
+pub fn Obligations::none() -> Self
+pub fn Obligations::requires_attribution(Self) -> Bool
+pub fn Obligations::requires_network_source(Self) -> Bool
+pub fn Obligations::requires_notice(Self) -> Bool
+pub fn Obligations::requires_patent_notice(Self) -> Bool
+pub fn Obligations::requires_same_license(Self) -> Bool
+pub fn Obligations::requires_source_disclosure(Self) -> Bool
+pub fn Obligations::to_json(Self) -> String
+pub fn Obligations::to_text(Self) -> String
+
+pub struct Policy {
+  require_osi : Bool
+  allowed_ids : Array[String]
+  denied_ids : Array[String]
+  preferred_ids : Array[String]
+  required_obligations : Array[String]
+} derive(Eq, @debug.Debug)
+pub fn Policy::allowed_ids(Self) -> Array[String]
+pub fn Policy::canonical(Self) -> String
+pub fn Policy::denied_ids(Self) -> Array[String]
+pub fn Policy::new(require_osi? : Bool, allowed_ids? : Array[String], denied_ids? : Array[String], preferred_ids? : Array[String], required_obligations? : Array[String]) -> Self
+pub fn Policy::osi_only() -> Self
+pub fn Policy::permissive() -> Self
+pub fn Policy::requires_osi(Self) -> Bool
+pub fn Policy::requiring(Self, Array[String]) -> Self
+pub fn Policy::with_allowed(Self, Array[String]) -> Self
+pub fn Policy::with_denied(Self, Array[String]) -> Self
+pub fn Policy::with_preferences(Self, Array[String]) -> Self
+
+pub struct PolicyMatrix {
+  decisions : Array[CatalogDecision]
+  accepted : Int
+  review : Int
+  rejected : Int
+} derive(Eq, @debug.Debug)
+pub fn PolicyMatrix::accepted(Self) -> Int
+pub fn PolicyMatrix::decisions(Self) -> Array[CatalogDecision]
+pub fn PolicyMatrix::rejected(Self) -> Int
+pub fn PolicyMatrix::review(Self) -> Int
+pub fn PolicyMatrix::to_json(Self) -> String
+pub fn PolicyMatrix::to_text(Self) -> String
+
+pub struct QueryResult {
+  query : String
+  components : Array[Component]
+} derive(Eq, @debug.Debug)
+pub fn QueryResult::components(Self) -> Array[Component]
+pub fn QueryResult::new(String, Array[Component]) -> Self
+pub fn QueryResult::query(Self) -> String
+pub fn QueryResult::to_json(Self) -> String
+pub fn QueryResult::to_text(Self) -> String
+
+// Type aliases
+
+// Traits
+

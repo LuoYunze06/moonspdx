@@ -1,0 +1,2 @@
+app|1.0|MIT
+engine|2.0|GPL-3.0-only OR Apache-2.0

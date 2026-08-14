@@ -1,0 +1,4 @@
+EXPRESSION (MIT OR Apache-2.0) AND BSD-3-Clause
+STATS atoms=3 and=1 or=1 depth=3 alternatives=2
+ALTERNATIVE 0 MIT AND BSD-3-Clause
+ALTERNATIVE 1 Apache-2.0 AND BSD-3-Clause

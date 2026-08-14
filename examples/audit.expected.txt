@@ -1,0 +1,4 @@
+MOONSPDX components=2 accepted=true review=0 rejected=0
+app@1.0 accepted selected=MIT obligations=preserve-notices,preserve-attribution
+engine@2.0 accepted selected=Apache-2.0 obligations=preserve-notices,preserve-attribution,patent-notice
+OBLIGATIONS preserve-notices,preserve-attribution,patent-notice

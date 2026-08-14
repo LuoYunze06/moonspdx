@@ -1,0 +1,1 @@
+rejected selected=GPL-3.0-only obligations=preserve-notices,preserve-attribution,disclose-source,same-license reasons=license is explicitly denied: GPL-3.0-only
