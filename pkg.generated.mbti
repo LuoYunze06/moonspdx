@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "moonspdx"
+package "LuoYunze06/moonspdx"
 
 import {
   "moonbitlang/core/debug",

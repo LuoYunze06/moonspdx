@@ -1,5 +1,5 @@
 import {
-  "moonspdx" @lib,
+  "LuoYunze06/moonspdx" @lib,
   "moonbitlang/core/env",
   "moonbitlang/x/sys",
 }
