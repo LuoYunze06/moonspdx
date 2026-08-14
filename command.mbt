@@ -39,6 +39,12 @@ pub let help_text =
   #|  moonspdx inspect   --expression TEXT
   #|  moonspdx evaluate  --expression TEXT [--policy TEXT] [--json]
   #|  moonspdx audit     --inventory TEXT [--policy TEXT] [--json]
+  #|  moonspdx diff      --before TEXT --after TEXT [--json]
+  #|  moonspdx matrix    [--policy TEXT] [--json]
+  #|  moonspdx summary   --inventory TEXT [--json]
+  #|  moonspdx notices   --inventory TEXT [--policy TEXT] [--json]
+  #|  moonspdx query     --inventory TEXT --license ID [--json]
+  #|  moonspdx canonical-inventory --inventory TEXT
   #|  moonspdx catalog
   #|  moonspdx demo
   #|
@@ -248,6 +254,7 @@ fn audit_command(args : Array[String]) -> CommandResult {
 ///|
 fn catalog_command() -> CommandResult {
   let output = StringBuilder::new()
+  output.write_string(catalog_stats().to_text() + "\n")
   for id in known_license_ids() {
     let info = lookup_license(id).unwrap()
     output.write_string(
@@ -262,6 +269,130 @@ fn catalog_command() -> CommandResult {
     )
   }
   command_ok(output.to_string().trim().to_owned())
+}
+
+///|
+fn diff_command(args : Array[String]) -> CommandResult {
+  let before = match command_option(args, "--before") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let after = match command_option(args, "--after") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let result = match diff_inventories(before, after) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  let output = if has_flag(args, "--json") {
+    result.to_json()
+  } else {
+    result.to_text()
+  }
+  command_ok(output)
+}
+
+///|
+fn matrix_command(args : Array[String]) -> CommandResult {
+  let policy = match policy_option(args) {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let matrix = policy_matrix(policy)
+  command_ok(
+    if has_flag(args, "--json") {
+      matrix.to_json()
+    } else {
+      matrix.to_text()
+    },
+  )
+}
+
+///|
+fn summary_command(args : Array[String]) -> CommandResult {
+  let source = match command_option(args, "--inventory") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let stats = match analyze_inventory(source) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  command_ok(
+    if has_flag(args, "--json") {
+      stats.to_json()
+    } else {
+      stats.to_text()
+    },
+  )
+}
+
+///|
+fn notices_command(args : Array[String]) -> CommandResult {
+  let source = match command_option(args, "--inventory") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let policy = match policy_option(args) {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let report = match audit_inventory(source, policy) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  let plan = match notice_plan(report) {
+    Ok(value) => value
+    Err(error) => return command_policy_failure(error.to_text())
+  }
+  command_ok(
+    if has_flag(args, "--json") {
+      plan.to_json()
+    } else {
+      plan.to_text()
+    },
+  )
+}
+
+///|
+fn query_command(args : Array[String]) -> CommandResult {
+  let source = match command_option(args, "--inventory") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let license = match command_option(args, "--license") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let index = match compile_inventory(source) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  let components = match index.using_license(license) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  let result = QueryResult::new("license=" + license, components)
+  command_ok(
+    if has_flag(args, "--json") {
+      result.to_json()
+    } else {
+      result.to_text()
+    },
+  )
+}
+
+///|
+fn canonical_inventory_command(args : Array[String]) -> CommandResult {
+  let source = match command_option(args, "--inventory") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  match canonical_inventory(source) {
+    Ok(value) => command_ok(value)
+    Err(error) => command_error(error.to_text())
+  }
 }
 
 ///|
@@ -294,6 +425,12 @@ pub fn execute(args : Array[String]) -> CommandResult {
     "inspect" => inspect_command(args)
     "evaluate" => evaluate_command(args)
     "audit" => audit_command(args)
+    "diff" => diff_command(args)
+    "matrix" => matrix_command(args)
+    "summary" => summary_command(args)
+    "notices" => notices_command(args)
+    "query" => query_command(args)
+    "canonical-inventory" => canonical_inventory_command(args)
     "catalog" => catalog_command()
     "demo" => demo_command()
     other => command_error("unknown command: " + other + "\n\n" + help_text)

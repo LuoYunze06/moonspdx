@@ -4,6 +4,12 @@ fn is_command(value : String) -> Bool {
   value == "inspect" ||
   value == "evaluate" ||
   value == "audit" ||
+  value == "diff" ||
+  value == "matrix" ||
+  value == "summary" ||
+  value == "notices" ||
+  value == "query" ||
+  value == "canonical-inventory" ||
   value == "catalog" ||
   value == "demo" ||
   value == "help" ||
