@@ -6,7 +6,7 @@ readme = "README.md"
 
 license = "Apache-2.0"
 
-keywords = ["spdx", "license", "compliance", "policy", "audit"]
+keywords = [ "spdx", "license", "compliance", "policy", "audit" ]
 
 preferred_target = "wasm-gc"
 

@@ -187,6 +187,14 @@ pub fn LicenseAtom::exception(self : LicenseAtom) -> String? {
 }
 
 ///|
+pub fn LicenseAtom::canonical(self : LicenseAtom) -> String {
+  match self.exception {
+    Some(value) => self.id + " WITH " + value
+    None => self.id
+  }
+}
+
+///|
 pub enum Expression {
   Atom(LicenseAtom)
   And(Expression, Expression)
