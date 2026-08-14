@@ -227,6 +227,19 @@ fn join_reasons(left : Array[String], right : Array[String]) -> Array[String] {
 }
 
 ///|
+fn preferred_rank(expression : Expression, preferred : Array[String]) -> Int {
+  let mut rank = preferred.length() + 1
+  for atom in expression.atoms() {
+    for index, id in preferred {
+      if atom.id == id && index < rank {
+        rank = index
+      }
+    }
+  }
+  rank
+}
+
+///|
 fn evaluate_expression(expression : Expression, policy : Policy) -> Evaluation {
   match expression {
     Atom(atom) => evaluate_atom(atom, policy)
@@ -247,10 +260,17 @@ fn evaluate_expression(expression : Expression, policy : Policy) -> Evaluation {
     }
     Or(left, right) => {
       let first = evaluate_expression(left, policy)
+      let second = evaluate_expression(right, policy)
+      if first.status == Accepted && second.status == Accepted {
+        if preferred_rank(right, policy.preferred_ids) <
+          preferred_rank(left, policy.preferred_ids) {
+          return second
+        }
+        return first
+      }
       if first.status == Accepted {
         return first
       }
-      let second = evaluate_expression(right, policy)
       if second.status == Accepted {
         return second
       }

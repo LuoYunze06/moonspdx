@@ -11,3 +11,7 @@ keywords = [ "spdx", "license", "compliance", "policy", "audit" ]
 preferred_target = "wasm-gc"
 
 description = "Deterministic SPDX expression and dependency license policy analysis for MoonBit"
+
+import {
+  "moonbitlang/x@0.4.49",
+}
