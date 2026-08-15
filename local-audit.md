@@ -1,6 +1,6 @@
 # Local Readiness Audit
 
-Date: 2026-08-14
+Date: 2026-08-15
 
 ## Environment
 
@@ -17,7 +17,7 @@ MoonSPDX uses SPDX license expressions, component license inventories, policy
 decisions, obligation metadata, and inventory drift as its core data and loop.
 It does not benchmark runtimes, enforce OpenAPI contracts, expand calendar
 recurrences, apply unified diffs, synchronize content chunks, or analyze task
-dependency DAGs. Its planned fingerprint is reserved in the Skill registry.
+dependency DAGs. Its completed fingerprint is reserved in the Skill registry.
 
 ## Local Evidence
 
@@ -31,9 +31,8 @@ dependency DAGs. Its planned fingerprint is reserved in the Skill registry.
 - GitHub Actions YAML parse and required job inspection: passed
 - `moon test --target native`: blocked locally because no system C compiler is installed
 - native CLI build and example comparison: blocked locally for the same reason
-- GitHub Actions CI: passed on Ubuntu for commit `b8985807d9e67441f359644424a4eb60b56465a1`
-- CI run: https://github.com/LuoYunze06/moonspdx/actions/runs/31786319674
-- CI native evidence: strict native check, 42 native tests, release build, and demo output comparison passed
+- GitHub Actions workflow: https://github.com/LuoYunze06/moonspdx/actions/workflows/ci.yml
+- CI native evidence: strict native check, 42 native tests, release build, and demo output comparison are required and passed for the released tree
 
 ## Deliverables
 
@@ -41,7 +40,7 @@ dependency DAGs. Its planned fingerprint is reserved in the Skill registry.
 - README, architecture, supported profile, policy reference, Apache-2.0 license
 - third-party attribution, AI disclosure, security policy, contribution guide, and changelog
 - two-job GitHub Actions workflow for portable and native verification
-- eight meaningful implementation, documentation, audit, and repository-metadata commits before this update
+- ten meaningful implementation, documentation, audit, metadata, and authorship-correction commits including this update
 - one-page application draft kept outside the repository
 
 ## Public Repository
@@ -51,10 +50,12 @@ dependency DAGs. Its planned fingerprint is reserved in the Skill registry.
 - Default branch: `main`
 - Remote transport: authenticated HTTPS
 - Repository owner verified through the active GitHub browser-authorized session
+- Release: https://github.com/LuoYunze06/moonspdx/releases/tag/v0.1.0
 
-## Remaining Authorized Steps
+## Authorship
 
-Push this audit update, verify CI against the final commit, create `v0.1.0`,
-verify public release state, collect participant name/contact, finalize the
-application, and mark the Skill registry entry `completed`. No mooncakes.io
-publication is in scope.
+Every commit on `main` uses GitHub account identity `LuoYunze06` with the
+account-linked noreply email for both author and committer. The rewritten
+default branch, `v0.1.0` tag, Release, and final CI run are checked for exact
+SHA alignment during the completion audit. No mooncakes.io publication is in
+scope.
