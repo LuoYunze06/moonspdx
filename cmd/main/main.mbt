@@ -1,5 +1,10 @@
 ///|
 fn is_command(value : String) -> Bool {
+  value == "equivalent" ||
+  value == "implies" ||
+  value == "fingerprint" ||
+  value == "model" ||
+  value == "truth-table" ||
   value == "normalize" ||
   value == "inspect" ||
   value == "evaluate" ||

@@ -31,28 +31,21 @@ fn command_error(output : String) -> CommandResult {
 
 ///|
 pub let help_text =
-  #|MoonSPDX 0.1.0
-  #|Deterministic SPDX expression and dependency license policy analysis.
+  #|MoonSPDX 0.2.0
+  #|Symbolic proofs and counterexamples for SPDX expression semantics.
   #|
   #|USAGE:
+  #|  moonspdx equivalent  --left TEXT --right TEXT [--json]
+  #|  moonspdx implies     --premise TEXT --conclusion TEXT [--json]
+  #|  moonspdx fingerprint --expression TEXT [--json]
+  #|  moonspdx model       --expression TEXT [--json]
+  #|  moonspdx truth-table --expression TEXT [--json]
   #|  moonspdx normalize --expression TEXT
   #|  moonspdx inspect   --expression TEXT
-  #|  moonspdx evaluate  --expression TEXT [--policy TEXT] [--json]
-  #|  moonspdx audit     --inventory TEXT [--policy TEXT] [--json]
-  #|  moonspdx diff      --before TEXT --after TEXT [--json]
-  #|  moonspdx matrix    [--policy TEXT] [--json]
-  #|  moonspdx summary   --inventory TEXT [--json]
-  #|  moonspdx notices   --inventory TEXT [--policy TEXT] [--json]
-  #|  moonspdx query     --inventory TEXT --license ID [--json]
-  #|  moonspdx canonical-inventory --inventory TEXT
-  #|  moonspdx catalog
   #|  moonspdx demo
   #|
-  #|TEXT INPUT: encode newlines as \n and tabs as \t.
-  #|POLICY: key=value lines for require-osi, allow, deny, prefer, and
-  #|        require-obligations.
-  #|INVENTORY: name|version|SPDX expression lines.
-  #|EXIT CODES: 0 accepted, 1 policy rejection/review, 2 invalid input.
+  #|SEMANTICS: each SPDX license or WITH atom is a Boolean proposition.
+  #|EXIT CODES: 0 proven/success, 1 disproven with witness, 2 invalid input.
 
 ///|
 fn decode_cli_text(value : String) -> Result[String, CommandResult] {
@@ -147,7 +140,15 @@ fn has_flag(args : Array[String], flag : String) -> Bool {
 
 ///|
 fn expression_option(args : Array[String]) -> Result[Expression, CommandResult] {
-  let source = match command_option(args, "--expression") {
+  named_expression_option(args, "--expression")
+}
+
+///|
+fn named_expression_option(
+  args : Array[String],
+  name : String,
+) -> Result[Expression, CommandResult] {
+  let source = match command_option(args, name) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -155,6 +156,104 @@ fn expression_option(args : Array[String]) -> Result[Expression, CommandResult] 
     Ok(value) => Ok(value)
     Err(error) => Err(command_error(error.to_text()))
   }
+}
+
+///|
+fn equivalent_command(args : Array[String]) -> CommandResult {
+  let left = match named_expression_option(args, "--left") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let right = match named_expression_option(args, "--right") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let proof = prove_equivalent(left, right)
+  let output = if has_flag(args, "--json") {
+    proof.to_json()
+  } else {
+    proof.to_text()
+  }
+  if proof.holds() {
+    command_ok(output)
+  } else {
+    command_policy_failure(output)
+  }
+}
+
+///|
+fn implication_command(args : Array[String]) -> CommandResult {
+  let premise = match named_expression_option(args, "--premise") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let conclusion = match named_expression_option(args, "--conclusion") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let proof = prove_implication(premise, conclusion)
+  let output = if has_flag(args, "--json") {
+    proof.to_json()
+  } else {
+    proof.to_text()
+  }
+  if proof.holds() {
+    command_ok(output)
+  } else {
+    command_policy_failure(output)
+  }
+}
+
+///|
+fn semantic_summary_command(
+  args : Array[String],
+  model_only : Bool,
+) -> CommandResult {
+  let expression = match expression_option(args) {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let summary = semantic_summary(expression)
+  if model_only {
+    match summary.model() {
+      Some(value) =>
+        command_ok(
+          if has_flag(args, "--json") {
+            value.to_json()
+          } else {
+            "MODEL " + value.to_text()
+          },
+        )
+      None => command_policy_failure("MODEL none")
+    }
+  } else {
+    command_ok(
+      if has_flag(args, "--json") {
+        summary.to_json()
+      } else {
+        summary.to_text()
+      },
+    )
+  }
+}
+
+///|
+fn truth_table_command(args : Array[String]) -> CommandResult {
+  let expression = match expression_option(args) {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let table = match truth_table(expression) {
+    Ok(value) => value
+    Err(error) => return command_error(error.to_text())
+  }
+  command_ok(
+    if has_flag(args, "--json") {
+      table.to_json()
+    } else {
+      table.to_text()
+    },
+  )
 }
 
 ///|
@@ -407,11 +506,9 @@ pub fn demo_policy() -> String {
 
 ///|
 fn demo_command() -> CommandResult {
-  let report = audit_inventory(
-    demo_inventory(),
-    parse_policy(demo_policy()).unwrap(),
-  ).unwrap()
-  command_ok(report.to_text())
+  let left = parse_expression("MIT AND (Apache-2.0 OR BSD-3-Clause)").unwrap()
+  let right = parse_expression("MIT AND Apache-2.0 OR MIT AND BSD-3-Clause").unwrap()
+  command_ok(prove_equivalent(left, right).to_text())
 }
 
 ///|
@@ -421,6 +518,11 @@ pub fn execute(args : Array[String]) -> CommandResult {
   }
   match args[0] {
     "help" | "--help" | "-h" => command_ok(help_text)
+    "equivalent" => equivalent_command(args)
+    "implies" => implication_command(args)
+    "fingerprint" => semantic_summary_command(args, false)
+    "model" => semantic_summary_command(args, true)
+    "truth-table" => truth_table_command(args)
     "normalize" => normalize_command(args)
     "inspect" => inspect_command(args)
     "evaluate" => evaluate_command(args)
