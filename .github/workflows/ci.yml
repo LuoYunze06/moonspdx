@@ -36,16 +36,16 @@ jobs:
         run: |
           moon run cmd/main --target js -- demo | tee demo.txt
           diff -u examples/demo.expected.txt demo.txt
-          moon run cmd/main --target js -- inspect --expression '(MIT OR Apache-2.0) AND BSD-3-Clause' | tee inspect.txt
+          moon run cmd/main --target js -- inspect --expression 'MIT OR Apache-2.0 AND BSD-3-Clause' | tee inspect.txt
           diff -u examples/inspect.expected.txt inspect.txt
-          moon run cmd/main --target js -- audit --inventory 'app|1.0|MIT\nengine|2.0|GPL-3.0-only OR Apache-2.0' --policy 'require-osi=true\ndeny=GPL-3.0-only\nprefer=Apache-2.0,MIT' | tee audit.txt
-          diff -u examples/audit.expected.txt audit.txt
+          moon run cmd/main --target js -- verify --claims "$(cat examples/claims.txt)" | tee suite.txt
+          diff -u examples/suite.expected.txt suite.txt
           set +e
-          moon run cmd/main --target js -- evaluate --expression 'GPL-3.0-only' --policy 'deny=GPL-3.0-only' > rejected.txt
+          moon run cmd/main --target js -- equivalent --left 'MIT OR Apache-2.0' --right 'MIT AND Apache-2.0' > counterexample.txt
           status=$?
           set -e
           test "$status" = "1"
-          diff -u examples/rejected.expected.txt rejected.txt
+          diff -u examples/counterexample.expected.txt counterexample.txt
 
   native:
     name: Native checks and CLI
@@ -65,3 +65,5 @@ jobs:
           moon build cmd/main --target native --release
           moon run cmd/main --target native -- demo | tee demo-native.txt
           diff -u examples/demo.expected.txt demo-native.txt
+          moon run cmd/main --target native -- verify --claims "$(cat examples/claims.txt)" | tee suite-native.txt
+          diff -u examples/suite.expected.txt suite-native.txt

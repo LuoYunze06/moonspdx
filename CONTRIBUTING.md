@@ -1,6 +1,6 @@
 # Contributing
 
-Open an issue before changing the supported SPDX profile or obligation model.
+Open an issue before changing the supported SPDX profile or Boolean semantics.
 Changes must include focused positive, negative, and boundary tests; stable
 diagnostic codes; documentation of support boundaries; and compatible source
 attribution.
@@ -18,5 +18,5 @@ moon test --target wasm
 moon test --target js
 ```
 
-Do not add legal conclusions, unknown-source license metadata, secrets, or
-generated padding intended only to increase line count.
+Do not add repository auditing, license policy or legal conclusions, SBOM or
+provenance workflows, unknown-source metadata, secrets, or generated padding.

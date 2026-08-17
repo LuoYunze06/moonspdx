@@ -1,16 +1,16 @@
 name = "LuoYunze06/moonspdx"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
 license = "Apache-2.0"
 
-keywords = [ "spdx", "license", "compliance", "policy", "audit" ]
+keywords = [ "spdx", "logic", "robdd", "proof", "counterexample" ]
 
 preferred_target = "wasm-gc"
 
-description = "Deterministic SPDX expression and dependency license policy analysis for MoonBit"
+description = "ROBDD equivalence and implication proofs for SPDX expressions"
 
 repository = "https://github.com/LuoYunze06/moonspdx"
 

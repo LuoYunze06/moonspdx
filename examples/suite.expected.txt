@@ -1,0 +1,4 @@
+PROOF-SUITE claims=3 passed=3 failed=0
+PROVEN commute relation=equivalent
+PROVEN distribute relation=equivalent
+PROVEN subset relation=implies

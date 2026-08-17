@@ -1,42 +1,42 @@
 # MoonSPDX
 
-MoonSPDX is a deterministic SPDX license expression and dependency-license
-policy toolkit written in MoonBit. It parses and normalizes expressions,
-selects compliant `OR` branches, audits component inventories, aggregates
-obligations, detects inventory drift, generates notice checklists, and exposes
-the same behavior through a portable CLI.
+MoonSPDX is a MoonBit library and CLI for proving Boolean relationships between
+SPDX license expressions. It compiles expressions into reduced ordered binary
+decision diagrams (ROBDDs), proves equivalence and implication, and returns a
+minimum, replayable truth assignment when a claim is false.
 
-MoonSPDX is an engineering aid, not legal advice. Its v0.1.0 catalog is a
-documented profile of 44 common SPDX identifiers and 10 exceptions rather than
-the complete SPDX License List.
+The project answers questions such as:
 
-## Scope
+- Did a metadata rewrite preserve the exact expression semantics?
+- Does every choice allowed by one expression also satisfy another expression?
+- Which smallest assignment disproves an incorrect equivalence or implication?
+- Is the left expression narrower, broader, equal, or incomparable?
+- Which source atoms can actually influence the decision function?
+- Can a set of semantic invariants be enforced as a deterministic CI gate?
 
-Supported:
+Each license identifier, including an identifier with `WITH`, is treated as an
+independent Boolean atom. These are formal expression semantics, not legal
+compatibility or compliance conclusions.
 
-- SPDX 2.x `AND`, `OR`, `WITH`, parentheses, and documented legacy `+` mappings
-- stable diagnostics for syntax, identifiers, exceptions, policies, and inventories
-- line-oriented `key=value` policies with OSI, allow, deny, preference, and obligation rules
-- deterministic policy selection, text/JSON reports, and exit codes
-- component inventory audits, statistics, queries, canonicalization, and baseline drift
-- catalog-wide policy matrices and mechanical notice-action checklists
-- 64-alternative safety bound and 512-component inventory bound
+## Why v0.2 is different
 
-Partial:
+MoonSPDX v0.1.0 was a license inventory and policy auditor. It failed the
+hackathon initial review because that workflow overlapped the maintained
+MoonCakes projects
+[`clbbbb/moonbit-license-audit`](https://github.com/clbbbb/moonbit-license-audit)
+and [`liyun/moonseal`](https://github.com/liyun6666/moonseal). v0.2 is a real
+redesign, not a wording change: the policy, inventory, obligation, drift,
+notice, and compatibility-matrix modules were removed from the current tree.
 
-- the curated identifier profile covers common open-source and source-available licenses
-- obligations are conservative metadata for automation, not compatibility judgments
-- legacy `+` syntax is accepted only where an explicit `-or-later` mapping exists
+| Project | Its central workflow | MoonSPDX v0.2 boundary |
+| --- | --- | --- |
+| `clbbbb/moonbit-license-audit` | Scan project evidence and inventories, apply policies and obligations, compare findings, suggest remediation | MoonSPDX does not scan files or decide compliance; it proves Boolean expression claims and produces counterexamples |
+| `liyun/moonseal` | Audit MoonBit release readiness and dependencies, generate CycloneDX/SARIF/provenance outputs | MoonSPDX does not parse manifests, audit releases, generate SBOMs, detect license text, or emit provenance |
 
-Unsupported:
+MoonSPDX can serve as a lower-level proof layer for any metadata tool that wants
+to verify a rewrite, but it does not depend on or replace either auditor.
 
-- `LicenseRef-*`, `DocumentRef-*`, SPDX JSON/tag-value documents, and full SBOM formats
-- license-text comparison, cryptographic SBOM verification, vulnerability scanning, and package discovery
-- legal conclusions, license compatibility proofs, waivers, or package publication
-
-See [the supported profile](docs/SUPPORTED_PROFILE.md) for the exact boundary.
-
-## Quick Start
+## Quick start
 
 ```bash
 moon update
@@ -44,70 +44,105 @@ moon test --target wasm-gc
 moon run cmd/main --target js -- demo
 ```
 
-Normalize an expression:
+Prove distributivity across two differently written SPDX expressions:
 
 ```bash
-moon run cmd/main --target js -- normalize --expression '(MIT OR Apache-2.0) AND BSD-3-Clause'
+moon run cmd/main --target js -- equivalent \
+  --left 'MIT AND (Apache-2.0 OR BSD-3-Clause)' \
+  --right 'MIT AND Apache-2.0 OR MIT AND BSD-3-Clause'
 ```
 
-Audit an escaped multiline inventory against a policy:
+Disprove an invalid implication and receive a minimum witness:
 
 ```bash
-moon run cmd/main --target js -- audit \
-  --inventory 'app|1.0|MIT\nengine|2.0|GPL-3.0-only OR Apache-2.0' \
-  --policy 'require-osi=true\ndeny=GPL-3.0-only\nprefer=Apache-2.0,MIT'
+moon run cmd/main --target js -- implies \
+  --premise 'MIT' \
+  --conclusion 'MIT AND Apache-2.0'
 ```
 
-On PowerShell, use single quotes as shown. CLI text options decode `\n`, `\r`,
-`\t`, and `\\`.
+Output includes:
+
+```text
+COUNTEREXAMPLE Apache-2.0=false, MIT=true
+```
+
+## Semantic regression suites
+
+A suite uses one pipe-separated claim per line:
+
+```text
+commute|equivalent|MIT OR Apache-2.0|Apache-2.0 OR MIT
+distribute|equivalent|MIT AND (Apache-2.0 OR BSD-3-Clause)|MIT AND Apache-2.0 OR MIT AND BSD-3-Clause
+subset|implies|MIT AND Apache-2.0|MIT
+```
+
+Run the checked example as one escaped CLI value:
+
+```bash
+moon run cmd/main --target js -- verify \
+  --claims 'commute|equivalent|MIT OR Apache-2.0|Apache-2.0 OR MIT\ndistribute|equivalent|MIT AND (Apache-2.0 OR BSD-3-Clause)|MIT AND Apache-2.0 OR MIT AND BSD-3-Clause\nsubset|implies|MIT AND Apache-2.0|MIT'
+```
+
+Exit `0` means every claim was proven. Exit `1` means at least one claim was
+disproven and its witness is present. Exit `2` means invalid input or usage.
 
 ## CLI
 
 ```text
-moonspdx normalize --expression TEXT
-moonspdx inspect --expression TEXT
-moonspdx evaluate --expression TEXT [--policy TEXT] [--json]
-moonspdx audit --inventory TEXT [--policy TEXT] [--json]
-moonspdx diff --before TEXT --after TEXT [--json]
-moonspdx matrix [--policy TEXT] [--json]
-moonspdx summary --inventory TEXT [--json]
-moonspdx notices --inventory TEXT [--policy TEXT] [--json]
-moonspdx query --inventory TEXT --license ID [--json]
-moonspdx canonical-inventory --inventory TEXT
-moonspdx catalog
+moonspdx equivalent  --left TEXT --right TEXT [--json]
+moonspdx implies     --premise TEXT --conclusion TEXT [--json]
+moonspdx fingerprint --expression TEXT [--json]
+moonspdx model       --expression TEXT [--json]
+moonspdx truth-table --expression TEXT [--json]
+moonspdx verify      --claims TEXT [--json]
+moonspdx compare     --left TEXT --right TEXT [--json]
+moonspdx influence   --expression TEXT [--json]
+moonspdx normalize   --expression TEXT
+moonspdx inspect     --expression TEXT
 moonspdx demo
 ```
-
-Exit `0` means accepted/success, `1` means policy rejection or unresolved
-review, and `2` means invalid input or usage.
 
 ## Library API
 
 ```moonbit
-let expression = @moonspdx.parse_expression("MIT OR Apache-2.0").unwrap()
-let policy = @moonspdx.parse_policy(
-  "require-osi=true\nprefer=Apache-2.0,MIT",
+let left = @moonspdx.parse_expression(
+  "MIT AND (Apache-2.0 OR BSD-3-Clause)",
 ).unwrap()
-let decision = @moonspdx.evaluate(expression, policy)
+let right = @moonspdx.parse_expression(
+  "MIT AND Apache-2.0 OR MIT AND BSD-3-Clause",
+).unwrap()
+let proof = @moonspdx.prove_equivalent(left, right)
+assert_true(proof.holds())
 
-let report = @moonspdx.audit_inventory(
-  "app|1.0|MIT\nengine|2.0|Apache-2.0",
-  policy,
+let suite = @moonspdx.verify_claims(
+  "subset|implies|MIT AND Apache-2.0|MIT",
 ).unwrap()
-let checklist = @moonspdx.notice_plan(report).unwrap()
+assert_true(suite.all_proven())
 ```
 
 The generated public interface is in `pkg.generated.mbti`.
 
-## Examples
+## Algorithm and limits
 
-`examples/` contains real inventory/policy inputs and checked CLI output. Run:
+MoonSPDX uses catalog-stable atom ordering, a unique table, memoized Boolean
+`AND`/`OR`/`XOR`, complement construction, and ROBDD reduction (`low == high`)
+to produce canonical decision functions. Failed relations are represented as
+`left XOR right` or `premise AND NOT conclusion`; a dynamic path search chooses
+a satisfying witness with the minimum number of `true` atoms.
 
-```bash
-moon run cmd/main --target js -- demo
-moon run cmd/main --target js -- inspect --expression '(MIT OR Apache-2.0) AND BSD-3-Clause'
-moon run cmd/main --target js -- audit --inventory 'app|1.0|MIT\nengine|2.0|GPL-3.0-only OR Apache-2.0' --policy 'require-osi=true\ndeny=GPL-3.0-only\nprefer=Apache-2.0,MIT'
-```
+Bidirectional implication classifies expression pairs as equivalent,
+left-narrower, left-broader, or incomparable. Cofactor comparison checks each
+atom's semantic influence; relevant atoms include assignments before and after
+the atom is flipped, while absorbed atoms are reported as redundant.
+
+- Source expression limit: 4,096 characters.
+- Claim suite limit: 128 records.
+- Complete truth tables: at most 10 distinct atoms.
+- Supported input profile: 44 common SPDX identifiers and 10 exceptions.
+- `LicenseRef-*`, `DocumentRef-*`, SPDX documents, and legal compatibility are unsupported.
+
+See [architecture](docs/ARCHITECTURE.md), [support profile](docs/SUPPORTED_PROFILE.md),
+and [direction record](docs/IDEATION.md).
 
 ## Verification
 
@@ -123,10 +158,9 @@ moon test --target js
 moon test --target native
 ```
 
-GitHub Actions repeats these checks on a clean Ubuntu runner and compares the
-CLI output with files under `examples/`.
+GitHub Actions repeats all targets and compares real JavaScript/native CLI
+output with fixtures under `examples/`.
 
 ## License
 
-Apache-2.0. See `LICENSE`. SPDX names and factual metadata are attributed in
-`THIRD_PARTY.md`.
+Apache-2.0. See `LICENSE` and `THIRD_PARTY.md`.

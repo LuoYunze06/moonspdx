@@ -1,5 +1,4 @@
-MOONSPDX components=3 accepted=true review=0 rejected=0
-moon-core@0.1 accepted selected=Apache-2.0 obligations=preserve-notices,preserve-attribution,patent-notice
-parser-kit@2.4 accepted selected=MIT obligations=preserve-notices,preserve-attribution
-font-data@1.2 accepted selected=OFL-1.1 obligations=preserve-notices,preserve-attribution
-OBLIGATIONS preserve-notices,preserve-attribution,patent-notice
+PROOF relation=equivalent holds=true variables=3 nodes=7
+LEFT MIT AND (Apache-2.0 OR BSD-3-Clause)
+RIGHT MIT AND Apache-2.0 OR MIT AND BSD-3-Clause
+COUNTEREXAMPLE none

@@ -1,25 +1,44 @@
 # Architecture
 
-MoonSPDX keeps domain behavior independent of filesystems and process APIs.
+MoonSPDX separates SPDX syntax from formal semantics and process adaptation.
 
-1. `parser.mbt` tokenizes SPDX text and uses precedence-aware recursive descent
-   to build `Expression` values. Catalog validation happens at the atom boundary.
-2. `catalog.mbt` and `catalog_stats.mbt` define the curated identifier profile,
-   broad families, conservative obligations, exception names, and profile metrics.
-3. `policy_parser.mbt` compiles line-oriented configuration into `Policy`.
-   `policy.mbt` evaluates atoms and expression trees, considers `OR` branches
-   deterministically, combines `AND` obligations, and records reasons.
-4. `inventory.mbt` validates component records and audits each expression.
-   `inventory_stats.mbt`, `inventory_query.mbt`, and `drift.mbt` provide
-   analysis without changing the original inventory.
-5. `notice.mbt` turns a fully accepted audit into explicit component actions.
-   It refuses rejected or review-state reports so a checklist cannot hide policy debt.
-6. `report.mbt` and domain-specific exporters produce stable text and compact
-   JSON without requiring a JSON runtime dependency.
-7. `command.mbt` is a pure argument-to-result facade. `cmd/main` only adapts
-   environment arguments, stdout, and process exit status.
+1. `parser.mbt` tokenizes the supported SPDX expression profile and builds an
+   `Expression` tree using precedence-aware recursive descent.
+2. `catalog.mbt` supplies a bounded set of valid atom names and a deterministic
+   catalog order. It contains no compliance classification or obligations.
+3. `semantic.mbt` collects atoms, builds a shared reduced ordered binary
+   decision diagram, and evaluates equivalence and implication claims.
+4. `suite.mbt` parses named proof claims and aggregates individual proofs into
+   a deterministic regression gate.
+5. `command.mbt` is a pure argument-to-result facade. `cmd/main` only adapts
+   process arguments, stdout, and exit status.
 
-All safety limits are checked before combinatorial work. Expression expansion
-is capped at 64 alternatives, source expressions at 4,096 characters, and
-inventories at 512 component lines. Diagnostics expose stable codes separately
-from human-readable context.
+## Decision representation
+
+Decision IDs `0` and `1` represent false and true. Every other node stores an
+ordered variable index plus low and high successors. `make_node` eliminates
+nodes whose branches are equal and reuses an existing identical triple. With a
+stable variable order, the resulting ROBDD is canonical for a Boolean function.
+
+`apply_decisions` recursively applies `AND`, `OR`, or `XOR` to two diagrams and
+memoizes operand pairs. Complement is built recursively with its own memo.
+Equivalence fails when `left XOR right` is satisfiable. Implication fails when
+`premise AND NOT conclusion` is satisfiable.
+
+Bidirectional implication produces the four-way comparison relation. Influence
+analysis restricts each atom to false and true, compares the two cofactors, and
+uses their XOR to derive a context in which a relevant atom changes the result.
+
+## Witnesses
+
+A failed proof keeps the failure diagram. Dynamic cost calculation assigns a
+cost of zero to a low edge and one to a high edge. Witness extraction follows
+the lower-cost satisfiable branch, breaking ties toward false. The result has
+the minimum number of true atoms and deterministic catalog-order rendering.
+Tests replay every witness against the source AST to verify the claimed failure.
+
+## Safety
+
+Expressions are capped at 4,096 characters, suites at 128 claim records, and
+complete truth tables at 10 atoms. The core performs no filesystem or network
+access. JSON and text renderers are deterministic and expose stable diagnostics.

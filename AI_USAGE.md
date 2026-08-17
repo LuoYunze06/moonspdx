@@ -5,5 +5,5 @@ generation, debugging, documentation, and CI preparation. The participant is
 responsible for reviewing the code, validating behavior, maintaining the
 project, and ensuring the submission is accurate.
 
-No generated claim should be treated as legal advice. The catalog and policy
-behavior are intentionally bounded and documented for engineering use.
+No generated proof should be treated as legal advice. Proofs concern Boolean
+expression semantics only; the supported atom profile and limits are documented.

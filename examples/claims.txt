@@ -1,0 +1,4 @@
+# name|relation|left|right
+commute|equivalent|MIT OR Apache-2.0|Apache-2.0 OR MIT
+distribute|equivalent|MIT AND (Apache-2.0 OR BSD-3-Clause)|MIT AND Apache-2.0 OR MIT AND BSD-3-Clause
+subset|implies|MIT AND Apache-2.0|MIT

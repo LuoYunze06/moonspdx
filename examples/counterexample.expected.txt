@@ -1,0 +1,4 @@
+PROOF relation=equivalent holds=false variables=2 nodes=6
+LEFT MIT OR Apache-2.0
+RIGHT MIT AND Apache-2.0
+COUNTEREXAMPLE Apache-2.0=false, MIT=true

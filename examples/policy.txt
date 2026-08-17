@@ -1,3 +1,0 @@
-require-osi=true
-deny=GPL-3.0-only
-prefer=Apache-2.0,MIT
