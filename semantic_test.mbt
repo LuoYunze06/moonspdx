@@ -126,3 +126,77 @@ test "semantic CLI renders models, tables, and usage errors" {
   )
   assert_eq(execute(["equivalent", "--left", "MIT"]).exit_code(), 2)
 }
+
+///|
+test "four-way comparison classifies subset direction" {
+  let narrow = compare_semantics(
+    parse_expression("MIT AND Apache-2.0").unwrap(),
+    parse_expression("MIT").unwrap(),
+  )
+  assert_eq(narrow.relation().name(), "left-narrower")
+  assert_true(narrow.left_implies_right().holds())
+  assert_false(narrow.right_implies_left().holds())
+  let broad = compare_semantics(
+    parse_expression("MIT").unwrap(),
+    parse_expression("MIT AND Apache-2.0").unwrap(),
+  )
+  assert_eq(broad.relation().name(), "left-broader")
+}
+
+///|
+test "four-way comparison identifies equivalence and incomparability" {
+  let equal = compare_semantics(
+    parse_expression("MIT OR Apache-2.0").unwrap(),
+    parse_expression("Apache-2.0 OR MIT").unwrap(),
+  )
+  assert_eq(equal.relation().name(), "equivalent")
+  let incomparable = compare_semantics(
+    parse_expression("MIT").unwrap(),
+    parse_expression("Apache-2.0").unwrap(),
+  )
+  assert_eq(incomparable.relation().name(), "incomparable")
+  assert_true(incomparable.to_text().contains("LEFT-ONLY"))
+  assert_true(incomparable.to_text().contains("RIGHT-ONLY"))
+  assert_true(incomparable.to_json().contains("\"relation\":\"incomparable\""))
+}
+
+///|
+test "influence analysis finds an atom removed by absorption" {
+  let expression = parse_expression("MIT OR MIT AND Apache-2.0").unwrap()
+  let report = analyze_influence(expression)
+  assert_eq(report.relevant(), 1)
+  assert_eq(report.redundant(), 1)
+  assert_eq(report.influences()[0].atom(), "Apache-2.0")
+  assert_false(report.influences()[0].relevant())
+  assert_eq(report.influences()[1].atom(), "MIT")
+  assert_true(report.influences()[1].relevant())
+}
+
+///|
+test "influence witnesses replay an atom flip" {
+  let expression = parse_expression("MIT AND Apache-2.0").unwrap()
+  let report = analyze_influence(expression)
+  assert_eq(report.relevant(), 2)
+  for influence in report.influences() {
+    let low = influence.when_false().unwrap()
+    let high = influence.when_true().unwrap()
+    assert_eq(expression.evaluate_assignment(low), influence.false_result())
+    assert_eq(expression.evaluate_assignment(high), influence.true_result())
+    assert_true(influence.false_result() != influence.true_result())
+  }
+  assert_true(report.to_json().contains("\"atoms\""))
+}
+
+///|
+test "comparison and influence CLI commands expose structured output" {
+  let comparison = execute([
+    "compare", "--left", "MIT", "--right", "Apache-2.0", "--json",
+  ])
+  assert_eq(comparison.exit_code(), 0)
+  assert_true(comparison.output().contains("\"relation\":\"incomparable\""))
+  let influence = execute([
+    "influence", "--expression", "MIT OR MIT AND Apache-2.0",
+  ])
+  assert_eq(influence.exit_code(), 0)
+  assert_true(influence.output().contains("redundant=1"))
+}

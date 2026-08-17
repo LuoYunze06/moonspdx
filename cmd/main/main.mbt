@@ -6,6 +6,8 @@ fn is_command(value : String) -> Bool {
   value == "model" ||
   value == "truth-table" ||
   value == "verify" ||
+  value == "compare" ||
+  value == "influence" ||
   value == "normalize" ||
   value == "inspect" ||
   value == "demo" ||

@@ -6,6 +6,10 @@ import {
 }
 
 // Values
+pub fn analyze_influence(Expression) -> InfluenceReport
+
+pub fn compare_semantics(Expression, Expression) -> SemanticComparison
+
 pub fn execute(Array[String]) -> CommandResult
 
 pub let help_text : String
@@ -37,6 +41,21 @@ pub fn verify_claims(String) -> Result[ProofSuite, Diagnostic]
 // Errors
 
 // Types and methods
+pub struct AtomInfluence {
+  atom : String
+  relevant : Bool
+  when_false : TruthAssignment?
+  when_true : TruthAssignment?
+  false_result : Bool
+  true_result : Bool
+} derive(Eq, @debug.Debug)
+pub fn AtomInfluence::atom(Self) -> String
+pub fn AtomInfluence::false_result(Self) -> Bool
+pub fn AtomInfluence::relevant(Self) -> Bool
+pub fn AtomInfluence::true_result(Self) -> Bool
+pub fn AtomInfluence::when_false(Self) -> TruthAssignment?
+pub fn AtomInfluence::when_true(Self) -> TruthAssignment?
+
 pub enum ClaimRelation {
   EquivalentClaim
   ImplicationClaim
@@ -97,6 +116,18 @@ pub fn ExpressionStats::depth(Self) -> Int
 pub fn ExpressionStats::or_operators(Self) -> Int
 pub fn ExpressionStats::to_text(Self) -> String
 
+pub struct InfluenceReport {
+  expression : String
+  influences : Array[AtomInfluence]
+  relevant : Int
+  redundant : Int
+} derive(Eq, @debug.Debug)
+pub fn InfluenceReport::influences(Self) -> Array[AtomInfluence]
+pub fn InfluenceReport::redundant(Self) -> Int
+pub fn InfluenceReport::relevant(Self) -> Int
+pub fn InfluenceReport::to_json(Self) -> String
+pub fn InfluenceReport::to_text(Self) -> String
+
 pub struct LicenseAtom {
   id : String
   exception : String?
@@ -129,6 +160,19 @@ pub fn SemanticClaim::name(Self) -> String
 pub fn SemanticClaim::relation(Self) -> ClaimRelation
 pub fn SemanticClaim::right(Self) -> Expression
 
+pub struct SemanticComparison {
+  left : String
+  right : String
+  relation : SemanticRelation
+  left_implies_right : SemanticProof
+  right_implies_left : SemanticProof
+} derive(Eq, @debug.Debug)
+pub fn SemanticComparison::left_implies_right(Self) -> SemanticProof
+pub fn SemanticComparison::relation(Self) -> SemanticRelation
+pub fn SemanticComparison::right_implies_left(Self) -> SemanticProof
+pub fn SemanticComparison::to_json(Self) -> String
+pub fn SemanticComparison::to_text(Self) -> String
+
 pub struct SemanticProof {
   relation : String
   left : String
@@ -145,6 +189,14 @@ pub fn SemanticProof::relation(Self) -> String
 pub fn SemanticProof::to_json(Self) -> String
 pub fn SemanticProof::to_text(Self) -> String
 pub fn SemanticProof::variables(Self) -> Array[String]
+
+pub enum SemanticRelation {
+  SemanticallyEquivalent
+  LeftNarrower
+  LeftBroader
+  SemanticallyIncomparable
+} derive(Eq, @debug.Debug)
+pub fn SemanticRelation::name(Self) -> String
 
 pub struct SemanticSummary {
   expression : String

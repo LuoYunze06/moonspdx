@@ -760,3 +760,390 @@ pub fn TruthTable::to_json(self : TruthTable) -> String {
   output.write_string("]}")
   output.to_string()
 }
+
+///|
+pub enum SemanticRelation {
+  SemanticallyEquivalent
+  LeftNarrower
+  LeftBroader
+  SemanticallyIncomparable
+} derive(Eq, @debug.Debug)
+
+///|
+pub fn SemanticRelation::name(self : SemanticRelation) -> String {
+  match self {
+    SemanticallyEquivalent => "equivalent"
+    LeftNarrower => "left-narrower"
+    LeftBroader => "left-broader"
+    SemanticallyIncomparable => "incomparable"
+  }
+}
+
+///|
+/// A four-way comparison based on implication in both directions.
+pub struct SemanticComparison {
+  left : String
+  right : String
+  relation : SemanticRelation
+  left_implies_right : SemanticProof
+  right_implies_left : SemanticProof
+} derive(Eq, @debug.Debug)
+
+///|
+pub fn SemanticComparison::relation(
+  self : SemanticComparison,
+) -> SemanticRelation {
+  self.relation
+}
+
+///|
+pub fn SemanticComparison::left_implies_right(
+  self : SemanticComparison,
+) -> SemanticProof {
+  self.left_implies_right
+}
+
+///|
+pub fn SemanticComparison::right_implies_left(
+  self : SemanticComparison,
+) -> SemanticProof {
+  self.right_implies_left
+}
+
+///|
+pub fn compare_semantics(
+  left : Expression,
+  right : Expression,
+) -> SemanticComparison {
+  let forward = prove_implication(left, right)
+  let backward = prove_implication(right, left)
+  let relation = if forward.holds() && backward.holds() {
+    SemanticallyEquivalent
+  } else if forward.holds() {
+    LeftNarrower
+  } else if backward.holds() {
+    LeftBroader
+  } else {
+    SemanticallyIncomparable
+  }
+  {
+    left: left.canonical(),
+    right: right.canonical(),
+    relation,
+    left_implies_right: forward,
+    right_implies_left: backward,
+  }
+}
+
+///|
+pub fn SemanticComparison::to_text(self : SemanticComparison) -> String {
+  let output = StringBuilder::new()
+  output.write_string(
+    "COMPARISON relation=" +
+    self.relation.name() +
+    " left_implies_right=" +
+    self.left_implies_right.holds().to_string() +
+    " right_implies_left=" +
+    self.right_implies_left.holds().to_string() +
+    "\nLEFT " +
+    self.left +
+    "\nRIGHT " +
+    self.right,
+  )
+  match self.left_implies_right.counterexample() {
+    Some(value) => output.write_string("\nLEFT-ONLY " + value.to_text())
+    None => ()
+  }
+  match self.right_implies_left.counterexample() {
+    Some(value) => output.write_string("\nRIGHT-ONLY " + value.to_text())
+    None => ()
+  }
+  output.to_string()
+}
+
+///|
+pub fn SemanticComparison::to_json(self : SemanticComparison) -> String {
+  "{" +
+  "\"relation\":" +
+  quote_json(self.relation.name()) +
+  ",\"left\":" +
+  quote_json(self.left) +
+  ",\"right\":" +
+  quote_json(self.right) +
+  ",\"left_implies_right\":" +
+  self.left_implies_right.to_json() +
+  ",\"right_implies_left\":" +
+  self.right_implies_left.to_json() +
+  "}"
+}
+
+///|
+priv struct RestrictionMemo {
+  source : Int
+  variable : Int
+  value : Bool
+  result : Int
+}
+
+///|
+fn restricted_memo(
+  memo : Array[RestrictionMemo],
+  source : Int,
+  variable : Int,
+  value : Bool,
+) -> Int? {
+  for entry in memo {
+    if entry.source == source &&
+      entry.variable == variable &&
+      entry.value == value {
+      return Some(entry.result)
+    }
+  }
+  None
+}
+
+///|
+fn restrict_decision(
+  manager : DecisionManager,
+  root : Int,
+  variable : Int,
+  value : Bool,
+  memo : Array[RestrictionMemo],
+) -> Int {
+  if root < 2 {
+    return root
+  }
+  match restricted_memo(memo, root, variable, value) {
+    Some(result) => return result
+    None => ()
+  }
+  let node = decision_node(manager, root)
+  let result = if node.variable == variable {
+    if value {
+      node.high
+    } else {
+      node.low
+    }
+  } else if node.variable > variable {
+    root
+  } else {
+    let low = restrict_decision(manager, node.low, variable, value, memo)
+    let high = restrict_decision(manager, node.high, variable, value, memo)
+    make_node(manager, node.variable, low, high)
+  }
+  memo.push({ source: root, variable, value, result })
+  result
+}
+
+///|
+fn assignment_overriding(
+  assignment : TruthAssignment,
+  atom : String,
+  value : Bool,
+) -> TruthAssignment {
+  let values : Array[TruthValue] = []
+  for entry in assignment.values {
+    values.push(
+      if entry.atom == atom {
+        { atom: entry.atom, value }
+      } else {
+        entry
+      },
+    )
+  }
+  { values, }
+}
+
+///|
+pub struct AtomInfluence {
+  atom : String
+  relevant : Bool
+  when_false : TruthAssignment?
+  when_true : TruthAssignment?
+  false_result : Bool
+  true_result : Bool
+} derive(Eq, @debug.Debug)
+
+///|
+pub fn AtomInfluence::atom(self : AtomInfluence) -> String {
+  self.atom
+}
+
+///|
+pub fn AtomInfluence::relevant(self : AtomInfluence) -> Bool {
+  self.relevant
+}
+
+///|
+pub fn AtomInfluence::when_false(self : AtomInfluence) -> TruthAssignment? {
+  self.when_false
+}
+
+///|
+pub fn AtomInfluence::when_true(self : AtomInfluence) -> TruthAssignment? {
+  self.when_true
+}
+
+///|
+pub fn AtomInfluence::false_result(self : AtomInfluence) -> Bool {
+  self.false_result
+}
+
+///|
+pub fn AtomInfluence::true_result(self : AtomInfluence) -> Bool {
+  self.true_result
+}
+
+///|
+pub struct InfluenceReport {
+  expression : String
+  influences : Array[AtomInfluence]
+  relevant : Int
+  redundant : Int
+} derive(Eq, @debug.Debug)
+
+///|
+pub fn InfluenceReport::influences(
+  self : InfluenceReport,
+) -> Array[AtomInfluence] {
+  self.influences
+}
+
+///|
+pub fn InfluenceReport::relevant(self : InfluenceReport) -> Int {
+  self.relevant
+}
+
+///|
+pub fn InfluenceReport::redundant(self : InfluenceReport) -> Int {
+  self.redundant
+}
+
+///|
+/// Find whether changing each atom can change the expression. Relevant atoms
+/// include a minimum context and the two replayable assignments.
+pub fn analyze_influence(expression : Expression) -> InfluenceReport {
+  let variables = ordered_variables([expression])
+  let manager : DecisionManager = { variables, nodes: [] }
+  let root = compile_decision(manager, expression, [])
+  let influences : Array[AtomInfluence] = []
+  let mut relevant_count = 0
+  let mut redundant_count = 0
+  for variable, atom in variables {
+    let restriction_memo : Array[RestrictionMemo] = []
+    let low = restrict_decision(
+      manager, root, variable, false, restriction_memo,
+    )
+    let high = restrict_decision(
+      manager, root, variable, true, restriction_memo,
+    )
+    if low == high {
+      redundant_count = redundant_count + 1
+      influences.push({
+        atom,
+        relevant: false,
+        when_false: None,
+        when_true: None,
+        false_result: false,
+        true_result: false,
+      })
+    } else {
+      relevant_count = relevant_count + 1
+      let difference = apply_decisions(manager, BooleanXor, low, high, [])
+      let context = minimum_witness(manager, difference).unwrap()
+      let when_false = assignment_overriding(context, atom, false)
+      let when_true = assignment_overriding(context, atom, true)
+      influences.push({
+        atom,
+        relevant: true,
+        when_false: Some(when_false),
+        when_true: Some(when_true),
+        false_result: expression.evaluate_assignment(when_false),
+        true_result: expression.evaluate_assignment(when_true),
+      })
+    }
+  }
+  {
+    expression: expression.canonical(),
+    influences,
+    relevant: relevant_count,
+    redundant: redundant_count,
+  }
+}
+
+///|
+pub fn InfluenceReport::to_text(self : InfluenceReport) -> String {
+  let output = StringBuilder::new()
+  output.write_string(
+    "INFLUENCE expression=" +
+    self.expression +
+    " relevant=" +
+    self.relevant.to_string() +
+    " redundant=" +
+    self.redundant.to_string(),
+  )
+  for influence in self.influences {
+    output.write_string(
+      "\nATOM " + influence.atom + " relevant=" + influence.relevant.to_string(),
+    )
+    match (influence.when_false, influence.when_true) {
+      (Some(low), Some(high)) =>
+        output.write_string(
+          " false_result=" +
+          influence.false_result.to_string() +
+          " true_result=" +
+          influence.true_result.to_string() +
+          " context=" +
+          low.to_text() +
+          " -> " +
+          high.to_text(),
+        )
+      _ => ()
+    }
+  }
+  output.to_string()
+}
+
+///|
+pub fn InfluenceReport::to_json(self : InfluenceReport) -> String {
+  let output = StringBuilder::new()
+  output.write_string(
+    "{\"expression\":" +
+    quote_json(self.expression) +
+    ",\"relevant\":" +
+    self.relevant.to_string() +
+    ",\"redundant\":" +
+    self.redundant.to_string() +
+    ",\"atoms\":[",
+  )
+  for index, influence in self.influences {
+    if index > 0 {
+      output.write_char(',')
+    }
+    let false_assignment = match influence.when_false {
+      Some(value) => value.to_json()
+      None => "null"
+    }
+    let true_assignment = match influence.when_true {
+      Some(value) => value.to_json()
+      None => "null"
+    }
+    output.write_string(
+      "{\"atom\":" +
+      quote_json(influence.atom) +
+      ",\"relevant\":" +
+      bool_json(influence.relevant) +
+      ",\"when_false\":" +
+      false_assignment +
+      ",\"when_true\":" +
+      true_assignment +
+      ",\"false_result\":" +
+      bool_json(influence.false_result) +
+      ",\"true_result\":" +
+      bool_json(influence.true_result) +
+      "}",
+    )
+  }
+  output.write_string("]}")
+  output.to_string()
+}

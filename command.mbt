@@ -41,6 +41,8 @@ pub let help_text =
   #|  moonspdx model       --expression TEXT [--json]
   #|  moonspdx truth-table --expression TEXT [--json]
   #|  moonspdx verify      --claims TEXT [--json]
+  #|  moonspdx compare     --left TEXT --right TEXT [--json]
+  #|  moonspdx influence   --expression TEXT [--json]
   #|  moonspdx normalize   --expression TEXT
   #|  moonspdx inspect     --expression TEXT
   #|  moonspdx demo
@@ -249,6 +251,42 @@ fn verify_command(args : Array[String]) -> CommandResult {
 }
 
 ///|
+fn comparison_command(args : Array[String]) -> CommandResult {
+  let left = match named_expression_option(args, "--left") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let right = match named_expression_option(args, "--right") {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let comparison = compare_semantics(left, right)
+  command_ok(
+    if has_flag(args, "--json") {
+      comparison.to_json()
+    } else {
+      comparison.to_text()
+    },
+  )
+}
+
+///|
+fn influence_command(args : Array[String]) -> CommandResult {
+  let expression = match expression_option(args) {
+    Ok(value) => value
+    Err(error) => return error
+  }
+  let report = analyze_influence(expression)
+  command_ok(
+    if has_flag(args, "--json") {
+      report.to_json()
+    } else {
+      report.to_text()
+    },
+  )
+}
+
+///|
 fn normalize_command(args : Array[String]) -> CommandResult {
   match expression_option(args) {
     Ok(expression) => command_ok(expression.canonical())
@@ -286,6 +324,8 @@ pub fn execute(args : Array[String]) -> CommandResult {
     "model" => semantic_summary_command(args, true)
     "truth-table" => truth_table_command(args)
     "verify" => verify_command(args)
+    "compare" => comparison_command(args)
+    "influence" => influence_command(args)
     "normalize" => normalize_command(args)
     "inspect" => inspect_command(args)
     "demo" => demo_command()
