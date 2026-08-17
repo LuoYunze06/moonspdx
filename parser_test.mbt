@@ -60,12 +60,8 @@ test "WITH cannot attach to a compound expression" {
 }
 
 ///|
-test "catalog exposes common families and obligations" {
-  let apache = lookup_license("Apache-2.0").unwrap()
-  assert_eq(apache.family().name(), "permissive")
-  assert_true(apache.obligations().requires_patent_notice())
-  let agpl = lookup_license("AGPL-3.0-only").unwrap()
-  assert_eq(agpl.family().name(), "strong-copyleft")
-  assert_true(agpl.obligations().requires_network_source())
+test "catalog exposes the bounded semantic atom profile" {
   assert_eq(known_license_ids().length(), 44)
+  assert_eq(known_exception_ids().length(), 10)
+  assert_true(is_known_exception("LLVM-exception"))
 }

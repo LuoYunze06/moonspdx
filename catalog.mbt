@@ -1,134 +1,4 @@
 ///|
-fn permissive(
-  id : String,
-  osi? : Bool = true,
-  patent? : Bool = false,
-) -> LicenseInfo {
-  {
-    id,
-    family: Permissive,
-    osi_approved: osi,
-    deprecated: false,
-    obligations: Obligations::make(
-      notice=true,
-      attribution=true,
-      patent_notice=patent,
-    ),
-  }
-}
-
-///|
-fn public_domain(id : String) -> LicenseInfo {
-  {
-    id,
-    family: PublicDomain,
-    osi_approved: true,
-    deprecated: false,
-    obligations: Obligations::none(),
-  }
-}
-
-///|
-fn weak_copyleft(id : String, osi? : Bool = true) -> LicenseInfo {
-  {
-    id,
-    family: WeakCopyleft,
-    osi_approved: osi,
-    deprecated: false,
-    obligations: Obligations::make(
-      notice=true,
-      attribution=true,
-      source_disclosure=true,
-      same_license=true,
-    ),
-  }
-}
-
-///|
-fn strong_copyleft(
-  id : String,
-  network? : Bool = false,
-  osi? : Bool = true,
-) -> LicenseInfo {
-  {
-    id,
-    family: StrongCopyleft,
-    osi_approved: osi,
-    deprecated: false,
-    obligations: Obligations::make(
-      notice=true,
-      attribution=true,
-      source_disclosure=true,
-      same_license=true,
-      network_source=network,
-    ),
-  }
-}
-
-///|
-fn other_license(id : String, osi? : Bool = false) -> LicenseInfo {
-  {
-    id,
-    family: Other,
-    osi_approved: osi,
-    deprecated: false,
-    obligations: Obligations::make(notice=true, attribution=true),
-  }
-}
-
-///|
-/// Look up the curated SPDX identifier profile supported by MoonSPDX v0.1.0.
-pub fn lookup_license(id : String) -> LicenseInfo? {
-  match id {
-    "0BSD" => Some(permissive(id))
-    "AFL-3.0" => Some(permissive(id))
-    "Apache-2.0" => Some(permissive(id, patent=true))
-    "Artistic-2.0" => Some(permissive(id))
-    "BSD-2-Clause" => Some(permissive(id))
-    "BSD-3-Clause" => Some(permissive(id))
-    "BSD-3-Clause-Clear" => Some(permissive(id))
-    "BSL-1.0" => Some(permissive(id))
-    "CC0-1.0" => Some(public_domain(id))
-    "CDDL-1.0" => Some(weak_copyleft(id))
-    "CDDL-1.1" => Some(weak_copyleft(id))
-    "ECL-2.0" => Some(permissive(id, patent=true))
-    "EPL-1.0" => Some(weak_copyleft(id))
-    "EPL-2.0" => Some(weak_copyleft(id))
-    "EUPL-1.1" => Some(strong_copyleft(id))
-    "EUPL-1.2" => Some(strong_copyleft(id))
-    "GPL-2.0-only" => Some(strong_copyleft(id))
-    "GPL-2.0-or-later" => Some(strong_copyleft(id))
-    "GPL-3.0-only" => Some(strong_copyleft(id))
-    "GPL-3.0-or-later" => Some(strong_copyleft(id))
-    "ISC" => Some(permissive(id))
-    "LGPL-2.0-only" => Some(weak_copyleft(id))
-    "LGPL-2.0-or-later" => Some(weak_copyleft(id))
-    "LGPL-2.1-only" => Some(weak_copyleft(id))
-    "LGPL-2.1-or-later" => Some(weak_copyleft(id))
-    "LGPL-3.0-only" => Some(weak_copyleft(id))
-    "LGPL-3.0-or-later" => Some(weak_copyleft(id))
-    "MIT" => Some(permissive(id))
-    "MIT-0" => Some(permissive(id))
-    "MPL-2.0" => Some(weak_copyleft(id))
-    "MS-PL" => Some(permissive(id))
-    "NCSA" => Some(permissive(id))
-    "OFL-1.1" => Some(other_license(id, osi=true))
-    "PostgreSQL" => Some(permissive(id))
-    "Python-2.0" => Some(permissive(id))
-    "Unlicense" => Some(public_domain(id))
-    "UPL-1.0" => Some(permissive(id, patent=true))
-    "Zlib" => Some(permissive(id))
-    "AGPL-3.0-only" => Some(strong_copyleft(id, network=true))
-    "AGPL-3.0-or-later" => Some(strong_copyleft(id, network=true))
-    "BlueOak-1.0.0" => Some(permissive(id, osi=false, patent=true))
-    "BUSL-1.1" => Some(other_license(id))
-    "CC-BY-4.0" => Some(other_license(id))
-    "CC-BY-SA-4.0" => Some(strong_copyleft(id, osi=false))
-    _ => None
-  }
-}
-
-///|
 pub fn known_license_ids() -> Array[String] {
   [
     "0BSD", "AFL-3.0", "AGPL-3.0-only", "AGPL-3.0-or-later", "Apache-2.0", "Artistic-2.0",
@@ -143,20 +13,22 @@ pub fn known_license_ids() -> Array[String] {
 }
 
 ///|
+pub fn known_exception_ids() -> Array[String] {
+  [
+    "Autoconf-exception-2.0", "Autoconf-exception-3.0", "Bison-exception-2.2", "Classpath-exception-2.0",
+    "Font-exception-2.0", "GCC-exception-2.0", "GCC-exception-3.1", "LLVM-exception",
+    "Linux-syscall-note", "OpenJDK-assembly-exception-1.0",
+  ]
+}
+
+///|
+fn is_known_license(id : String) -> Bool {
+  known_license_ids().any(fn(value) { value == id })
+}
+
+///|
 pub fn is_known_exception(id : String) -> Bool {
-  match id {
-    "Autoconf-exception-2.0"
-    | "Autoconf-exception-3.0"
-    | "Bison-exception-2.2"
-    | "Classpath-exception-2.0"
-    | "Font-exception-2.0"
-    | "GCC-exception-2.0"
-    | "GCC-exception-3.1"
-    | "LLVM-exception"
-    | "Linux-syscall-note"
-    | "OpenJDK-assembly-exception-1.0" => true
-    _ => false
-  }
+  known_exception_ids().any(fn(value) { value == id })
 }
 
 ///|

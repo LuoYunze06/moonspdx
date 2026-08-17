@@ -12,37 +12,3 @@ test "expands conjunctive alternatives" {
 }
 
 ///|
-test "parses and canonicalizes policy" {
-  let source = "require-osi=true\nallow=MIT,Apache-2.0\ndeny=BUSL-1.1\nprefer=Apache-2.0\nrequire-obligations=preserve-notices"
-  let policy = parse_policy(source).unwrap()
-  assert_true(policy.requires_osi())
-  assert_eq(policy.allowed_ids().length(), 2)
-  assert_eq(policy.denied_ids(), ["BUSL-1.1"])
-  assert_eq(parse_policy(policy.canonical()), Ok(policy))
-}
-
-///|
-test "rejects policy conflicts and unknown values" {
-  assert_eq(
-    parse_policy("allow=MIT\ndeny=MIT").unwrap_err().code(),
-    "policy.rule.conflict",
-  )
-  assert_eq(
-    parse_policy("deny=Made-Up-1.0").unwrap_err().code(),
-    "policy.license.unknown",
-  )
-  assert_eq(
-    parse_policy("require-obligations=pay-royalties").unwrap_err().code(),
-    "policy.obligation.unknown",
-  )
-}
-
-///|
-test "renders stable text and JSON reports" {
-  let report = audit_inventory(
-    "app|1.0|MIT\nengine|2.0|Apache-2.0",
-    Policy::osi_only(),
-  ).unwrap()
-  assert_true(report.to_text().contains("MOONSPDX components=2 accepted=true"))
-  assert_true(report.to_json().contains("\"name\":\"engine\""))
-}

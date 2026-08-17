@@ -5,17 +5,9 @@ fn is_command(value : String) -> Bool {
   value == "fingerprint" ||
   value == "model" ||
   value == "truth-table" ||
+  value == "verify" ||
   value == "normalize" ||
   value == "inspect" ||
-  value == "evaluate" ||
-  value == "audit" ||
-  value == "diff" ||
-  value == "matrix" ||
-  value == "summary" ||
-  value == "notices" ||
-  value == "query" ||
-  value == "canonical-inventory" ||
-  value == "catalog" ||
   value == "demo" ||
   value == "help" ||
   value == "--help" ||

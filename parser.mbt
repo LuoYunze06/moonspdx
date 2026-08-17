@@ -115,7 +115,7 @@ fn validate_atom(id : String, offset : Int) -> Result[LicenseAtom, Diagnostic] {
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  if lookup_license(normalized) is None {
+  if !is_known_license(normalized) {
     return Err(
       Diagnostic::new(
         "expression.license.unknown",
