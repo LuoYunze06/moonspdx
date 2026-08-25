@@ -1,6 +1,6 @@
 ///|
 fn join_text(values : Array[String], separator : String) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   for index, value in values {
     if index > 0 {
       output.write_string(separator)
@@ -12,7 +12,7 @@ fn join_text(values : Array[String], separator : String) -> String {
 
 ///|
 fn escape_json(value : String) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   for char in value {
     match char {
       '"' => output.write_string("\\\"")
@@ -42,7 +42,7 @@ fn bool_json(value : Bool) -> String {
 
 ///|
 fn strings_json(values : Array[String]) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_char('[')
   for index, value in values {
     if index > 0 {

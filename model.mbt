@@ -84,7 +84,7 @@ fn render_expression(
 ///|
 /// Render the expression with stable spacing and only semantic parentheses.
 pub fn Expression::canonical(self : Expression) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   render_expression(output, self, 0)
   output.to_string()
 }

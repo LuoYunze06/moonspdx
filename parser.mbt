@@ -79,7 +79,7 @@ fn tokenize(source : String) -> Result[Array[Token], Diagnostic] {
       index = index + 1
     } else if is_identifier_char(current) {
       let start = index
-      let output = StringBuilder::new()
+      let output = StringBuilder()
       while index < chars.length() && is_identifier_char(chars[index]) {
         output.write_char(chars[index])
         index = index + 1

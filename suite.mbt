@@ -264,7 +264,7 @@ pub fn verify_claims_with_limits(
 
 ///|
 pub fn ProofSuite::to_text(self : ProofSuite) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "PROOF-SUITE claims=" +
     self.results.length().to_string() +
@@ -291,7 +291,7 @@ pub fn ProofSuite::to_text(self : ProofSuite) -> String {
 
 ///|
 pub fn ProofSuite::to_json(self : ProofSuite) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "{\"all_proven\":" +
     bool_json(self.all_proven()) +

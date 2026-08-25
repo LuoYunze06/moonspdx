@@ -66,7 +66,7 @@ pub fn Expression::evaluate_assignment(
 
 ///|
 pub fn TruthAssignment::to_text(self : TruthAssignment) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   for index, value in self.values {
     if index > 0 {
       output.write_string(", ")
@@ -78,7 +78,7 @@ pub fn TruthAssignment::to_text(self : TruthAssignment) -> String {
 
 ///|
 pub fn TruthAssignment::to_json(self : TruthAssignment) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_char('{')
   for index, value in self.values {
     if index > 0 {
@@ -645,7 +645,7 @@ pub fn semantic_summary_with_limits(
 
 ///|
 pub fn SemanticSummary::to_text(self : SemanticSummary) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "SEMANTICS expression=" +
     self.expression +
@@ -803,7 +803,7 @@ pub fn prove_implication_with_limits(
 
 ///|
 pub fn SemanticProof::to_text(self : SemanticProof) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "PROOF relation=" +
     self.relation +
@@ -937,7 +937,7 @@ pub fn truth_table(expression : Expression) -> Result[TruthTable, Diagnostic] {
 
 ///|
 pub fn TruthTable::to_text(self : TruthTable) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "TRUTH-TABLE expression=" +
     self.expression +
@@ -954,7 +954,7 @@ pub fn TruthTable::to_text(self : TruthTable) -> String {
 
 ///|
 pub fn TruthTable::to_json(self : TruthTable) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "{\"expression\":" +
     quote_json(self.expression) +
@@ -1069,7 +1069,7 @@ pub fn compare_semantics_with_limits(
 
 ///|
 pub fn SemanticComparison::to_text(self : SemanticComparison) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "COMPARISON relation=" +
     self.relation.name() +
@@ -1342,7 +1342,7 @@ pub fn analyze_influence_with_limits(
 
 ///|
 pub fn InfluenceReport::to_text(self : InfluenceReport) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "INFLUENCE expression=" +
     self.expression +
@@ -1379,7 +1379,7 @@ pub fn InfluenceReport::to_text(self : InfluenceReport) -> String {
 
 ///|
 pub fn InfluenceReport::to_json(self : InfluenceReport) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(
     "{\"expression\":" +
     quote_json(self.expression) +

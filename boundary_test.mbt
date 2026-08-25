@@ -17,7 +17,7 @@ test "expression boundary diagnostics remain stable" {
 
 ///|
 test "parser rejects excessive parenthesis nesting before recursion" {
-  let source = StringBuilder::new()
+  let source = StringBuilder()
   let mut index = 0
   while index < 65 {
     source.write_char('(')

@@ -54,7 +54,7 @@ pub let help_text =
 
 ///|
 fn decode_cli_text(value : String) -> Result[String, CommandResult] {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   let mut escaping = false
   for char in value {
     if escaping {
