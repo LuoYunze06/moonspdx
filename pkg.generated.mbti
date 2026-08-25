@@ -6,9 +6,13 @@ import {
 }
 
 // Values
-pub fn analyze_influence(Expression) -> InfluenceReport
+pub fn analyze_influence(Expression) -> Result[InfluenceReport, Diagnostic]
 
-pub fn compare_semantics(Expression, Expression) -> SemanticComparison
+pub fn analyze_influence_with_limits(Expression, SemanticLimits) -> Result[InfluenceReport, Diagnostic]
+
+pub fn compare_semantics(Expression, Expression) -> Result[SemanticComparison, Diagnostic]
+
+pub fn compare_semantics_with_limits(Expression, Expression, SemanticLimits) -> Result[SemanticComparison, Diagnostic]
 
 pub fn execute(Array[String]) -> CommandResult
 
@@ -26,17 +30,25 @@ pub fn parse_claims(String) -> Result[Array[SemanticClaim], Diagnostic]
 
 pub fn parse_expression(String) -> Result[Expression, Diagnostic]
 
-pub fn prove_equivalent(Expression, Expression) -> SemanticProof
+pub fn prove_equivalent(Expression, Expression) -> Result[SemanticProof, Diagnostic]
 
-pub fn prove_implication(Expression, Expression) -> SemanticProof
+pub fn prove_equivalent_with_limits(Expression, Expression, SemanticLimits) -> Result[SemanticProof, Diagnostic]
+
+pub fn prove_implication(Expression, Expression) -> Result[SemanticProof, Diagnostic]
+
+pub fn prove_implication_with_limits(Expression, Expression, SemanticLimits) -> Result[SemanticProof, Diagnostic]
 
 pub fn render_alternative(Array[LicenseAtom]) -> String
 
-pub fn semantic_summary(Expression) -> SemanticSummary
+pub fn semantic_summary(Expression) -> Result[SemanticSummary, Diagnostic]
+
+pub fn semantic_summary_with_limits(Expression, SemanticLimits) -> Result[SemanticSummary, Diagnostic]
 
 pub fn truth_table(Expression) -> Result[TruthTable, Diagnostic]
 
 pub fn verify_claims(String) -> Result[ProofSuite, Diagnostic]
+
+pub fn verify_claims_with_limits(String, SemanticLimits) -> Result[ProofSuite, Diagnostic]
 
 // Errors
 
@@ -121,8 +133,12 @@ pub struct InfluenceReport {
   influences : Array[AtomInfluence]
   relevant : Int
   redundant : Int
+  decision_nodes : Int
+  operations : Int
 } derive(Eq, @debug.Debug)
+pub fn InfluenceReport::decision_nodes(Self) -> Int
 pub fn InfluenceReport::influences(Self) -> Array[AtomInfluence]
+pub fn InfluenceReport::operations(Self) -> Int
 pub fn InfluenceReport::redundant(Self) -> Int
 pub fn InfluenceReport::relevant(Self) -> Int
 pub fn InfluenceReport::to_json(Self) -> String
@@ -173,6 +189,17 @@ pub fn SemanticComparison::right_implies_left(Self) -> SemanticProof
 pub fn SemanticComparison::to_json(Self) -> String
 pub fn SemanticComparison::to_text(Self) -> String
 
+pub struct SemanticLimits {
+  max_variables : Int
+  max_nodes : Int
+  max_operations : Int
+} derive(Eq, @debug.Debug)
+pub fn SemanticLimits::default() -> Self
+pub fn SemanticLimits::max_nodes(Self) -> Int
+pub fn SemanticLimits::max_operations(Self) -> Int
+pub fn SemanticLimits::max_variables(Self) -> Int
+pub fn SemanticLimits::new(Int, Int, Int) -> Result[Self, Diagnostic]
+
 pub struct SemanticProof {
   relation : String
   left : String
@@ -180,11 +207,13 @@ pub struct SemanticProof {
   holds : Bool
   variables : Array[String]
   decision_nodes : Int
+  operations : Int
   counterexample : TruthAssignment?
 } derive(Eq, @debug.Debug)
 pub fn SemanticProof::counterexample(Self) -> TruthAssignment?
 pub fn SemanticProof::decision_nodes(Self) -> Int
 pub fn SemanticProof::holds(Self) -> Bool
+pub fn SemanticProof::operations(Self) -> Int
 pub fn SemanticProof::relation(Self) -> String
 pub fn SemanticProof::to_json(Self) -> String
 pub fn SemanticProof::to_text(Self) -> String
@@ -202,12 +231,14 @@ pub struct SemanticSummary {
   expression : String
   variables : Array[String]
   decision_nodes : Int
+  operations : Int
   fingerprint : String
   model : TruthAssignment?
 } derive(Eq, @debug.Debug)
 pub fn SemanticSummary::decision_nodes(Self) -> Int
 pub fn SemanticSummary::fingerprint(Self) -> String
 pub fn SemanticSummary::model(Self) -> TruthAssignment?
+pub fn SemanticSummary::operations(Self) -> Int
 pub fn SemanticSummary::to_json(Self) -> String
 pub fn SemanticSummary::to_text(Self) -> String
 pub fn SemanticSummary::variables(Self) -> Array[String]

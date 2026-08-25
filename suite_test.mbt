@@ -70,3 +70,12 @@ test "verify CLI gates suites with stable exit codes" {
   assert_eq(failed.exit_code(), 1)
   assert_true(failed.output().contains("\"all_proven\":false"))
 }
+
+///|
+test "proof suites propagate semantic budget diagnostics" {
+  let limits = SemanticLimits::new(1, 100, 1000).unwrap()
+  let error = verify_claims_with_limits(
+    "wide|equivalent|MIT OR Apache-2.0|MIT", limits,
+  ).unwrap_err()
+  assert_eq(error.code(), "semantic.variable.limit")
+}

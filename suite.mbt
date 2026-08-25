@@ -224,6 +224,14 @@ pub fn ProofSuite::all_proven(self : ProofSuite) -> Bool {
 
 ///|
 pub fn verify_claims(source : String) -> Result[ProofSuite, Diagnostic] {
+  verify_claims_with_limits(source, SemanticLimits::default())
+}
+
+///|
+pub fn verify_claims_with_limits(
+  source : String,
+  limits : SemanticLimits,
+) -> Result[ProofSuite, Diagnostic] {
   let claims = match parse_claims(source) {
     Ok(value) => value
     Err(error) => return Err(error)
@@ -233,8 +241,16 @@ pub fn verify_claims(source : String) -> Result[ProofSuite, Diagnostic] {
   let mut failed = 0
   for claim in claims {
     let proof = match claim.relation {
-      EquivalentClaim => prove_equivalent(claim.left, claim.right)
-      ImplicationClaim => prove_implication(claim.left, claim.right)
+      EquivalentClaim =>
+        match prove_equivalent_with_limits(claim.left, claim.right, limits) {
+          Ok(value) => value
+          Err(error) => return Err(error)
+        }
+      ImplicationClaim =>
+        match prove_implication_with_limits(claim.left, claim.right, limits) {
+          Ok(value) => value
+          Err(error) => return Err(error)
+        }
     }
     if proof.holds() {
       passed = passed + 1

@@ -51,14 +51,30 @@ fn tokenize(source : String) -> Result[Array[Token], Diagnostic] {
   let chars : Array[Char] = source.to_array()
   let tokens = []
   let mut index = 0
+  let mut parenthesis_depth = 0
   while index < chars.length() {
     let current = chars[index]
     if current == ' ' || current == '\t' || current == '\r' || current == '\n' {
       index = index + 1
     } else if current == '(' {
+      parenthesis_depth = parenthesis_depth + 1
+      if parenthesis_depth > 64 {
+        return Err(
+          Diagnostic::new(
+            "expression.depth.limit",
+            source_location(index),
+            "expression nesting exceeds the parser safety limit",
+            "at most 64 nested parentheses",
+            parenthesis_depth.to_string(),
+          ),
+        )
+      }
       tokens.push({ kind: LeftParen, offset: index })
       index = index + 1
     } else if current == ')' {
+      if parenthesis_depth > 0 {
+        parenthesis_depth = parenthesis_depth - 1
+      }
       tokens.push({ kind: RightParen, offset: index })
       index = index + 1
     } else if is_identifier_char(current) {

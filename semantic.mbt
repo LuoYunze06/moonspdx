@@ -101,6 +101,63 @@ priv struct DecisionNode {
 priv struct DecisionManager {
   variables : Array[String]
   nodes : Array[DecisionNode]
+  max_nodes : Int
+  max_operations : Int
+  operations : Array[Int]
+  exceeded : Array[String]
+}
+
+///|
+/// Resource budget for one symbolic compilation or proof.
+pub struct SemanticLimits {
+  max_variables : Int
+  max_nodes : Int
+  max_operations : Int
+} derive(Eq, @debug.Debug)
+
+///|
+pub fn SemanticLimits::default() -> SemanticLimits {
+  { max_variables: 32, max_nodes: 4096, max_operations: 50000 }
+}
+
+///|
+pub fn SemanticLimits::new(
+  max_variables : Int,
+  max_nodes : Int,
+  max_operations : Int,
+) -> Result[SemanticLimits, Diagnostic] {
+  if max_variables < 1 || max_nodes < 1 || max_operations < 1 {
+    Err(
+      Diagnostic::new(
+        "semantic.limit.invalid",
+        "limits",
+        "semantic limits must all be positive",
+        "positive variable, node, and operation limits",
+        max_variables.to_string() +
+        "," +
+        max_nodes.to_string() +
+        "," +
+        max_operations.to_string(),
+      ),
+    )
+  } else {
+    Ok({ max_variables, max_nodes, max_operations })
+  }
+}
+
+///|
+pub fn SemanticLimits::max_variables(self : SemanticLimits) -> Int {
+  self.max_variables
+}
+
+///|
+pub fn SemanticLimits::max_nodes(self : SemanticLimits) -> Int {
+  self.max_nodes
+}
+
+///|
+pub fn SemanticLimits::max_operations(self : SemanticLimits) -> Int {
+  self.max_operations
 }
 
 ///|
@@ -166,6 +223,74 @@ fn ordered_variables(expressions : Array[Expression]) -> Array[String] {
 }
 
 ///|
+fn new_decision_manager(
+  expressions : Array[Expression],
+  limits : SemanticLimits,
+) -> Result[DecisionManager, Diagnostic] {
+  let variables = ordered_variables(expressions)
+  if variables.length() > limits.max_variables {
+    Err(
+      Diagnostic::new(
+        "semantic.variable.limit",
+        "expression",
+        "semantic compilation exceeds the variable budget",
+        "at most " + limits.max_variables.to_string() + " distinct atoms",
+        variables.length().to_string(),
+      ),
+    )
+  } else {
+    Ok({
+      variables,
+      nodes: [],
+      max_nodes: limits.max_nodes,
+      max_operations: limits.max_operations,
+      operations: [0],
+      exceeded: [""],
+    })
+  }
+}
+
+///|
+fn consume_operation(manager : DecisionManager) -> Bool {
+  if !manager.exceeded[0].is_empty() {
+    return false
+  }
+  if manager.operations[0] >= manager.max_operations {
+    manager.exceeded[0] = "operations"
+    return false
+  }
+  manager.operations[0] = manager.operations[0] + 1
+  true
+}
+
+///|
+fn semantic_budget_error(manager : DecisionManager) -> Diagnostic? {
+  match manager.exceeded[0] {
+    "nodes" =>
+      Some(
+        Diagnostic::new(
+          "semantic.node.limit",
+          "expression",
+          "semantic compilation exceeds the decision-node budget",
+          "at most " + manager.max_nodes.to_string() + " decision nodes",
+          "more than " + manager.max_nodes.to_string(),
+        ),
+      )
+    "operations" =>
+      Some(
+        Diagnostic::new(
+          "semantic.operation.limit",
+          "expression",
+          "semantic compilation exceeds the operation budget",
+          "at most " + manager.max_operations.to_string() + " operations",
+          "more than " + manager.max_operations.to_string(),
+        ),
+      )
+    _ => None
+  }
+}
+
+///|
 fn variable_index(variables : Array[String], atom : String) -> Int {
   for index, value in variables {
     if value == atom {
@@ -196,14 +321,24 @@ fn make_node(
   low : Int,
   high : Int,
 ) -> Int {
+  if !consume_operation(manager) {
+    return 0
+  }
   if low == high {
     return low
   }
   let wanted : DecisionNode = { variable, low, high }
   for index, node in manager.nodes {
+    if !consume_operation(manager) {
+      return 0
+    }
     if node == wanted {
       return index + 2
     }
+  }
+  if manager.nodes.length() >= manager.max_nodes {
+    manager.exceeded[0] = "nodes"
+    return 0
   }
   manager.nodes.push(wanted)
   manager.nodes.length() + 1
@@ -231,12 +366,16 @@ fn terminal_operation(
 
 ///|
 fn memoized_apply(
+  manager : DecisionManager,
   memo : Array[ApplyMemo],
   operation : BooleanOperation,
   left : Int,
   right : Int,
 ) -> Int? {
   for entry in memo {
+    if !consume_operation(manager) {
+      return Some(0)
+    }
     if entry.operation == operation &&
       entry.left == left &&
       entry.right == right {
@@ -254,10 +393,13 @@ fn apply_decisions(
   right : Int,
   memo : Array[ApplyMemo],
 ) -> Int {
+  if !consume_operation(manager) {
+    return 0
+  }
   if left < 2 && right < 2 {
     return terminal_operation(operation, left, right)
   }
-  match memoized_apply(memo, operation, left, right) {
+  match memoized_apply(manager, memo, operation, left, right) {
     Some(result) => return result
     None => ()
   }
@@ -297,6 +439,9 @@ fn compile_decision(
   expression : Expression,
   memo : Array[ApplyMemo],
 ) -> Int {
+  if !consume_operation(manager) {
+    return 0
+  }
   match expression {
     Atom(atom) => {
       let index = variable_index(manager.variables, atom.canonical())
@@ -321,6 +466,9 @@ fn complement_decision(
   source : Int,
   memo : Array[ComplementMemo],
 ) -> Int {
+  if !consume_operation(manager) {
+    return 0
+  }
   if source == 0 {
     return 1
   }
@@ -328,6 +476,9 @@ fn complement_decision(
     return 0
   }
   for entry in memo {
+    if !consume_operation(manager) {
+      return 0
+    }
     if entry.source == source {
       return entry.result
     }
@@ -430,6 +581,7 @@ pub struct SemanticSummary {
   expression : String
   variables : Array[String]
   decision_nodes : Int
+  operations : Int
   fingerprint : String
   model : TruthAssignment?
 } derive(Eq, @debug.Debug)
@@ -445,6 +597,11 @@ pub fn SemanticSummary::decision_nodes(self : SemanticSummary) -> Int {
 }
 
 ///|
+pub fn SemanticSummary::operations(self : SemanticSummary) -> Int {
+  self.operations
+}
+
+///|
 pub fn SemanticSummary::fingerprint(self : SemanticSummary) -> String {
   self.fingerprint
 }
@@ -456,16 +613,33 @@ pub fn SemanticSummary::model(self : SemanticSummary) -> TruthAssignment? {
 
 ///|
 /// Compile one expression into a canonical semantic representation.
-pub fn semantic_summary(expression : Expression) -> SemanticSummary {
-  let variables = ordered_variables([expression])
-  let manager : DecisionManager = { variables, nodes: [] }
+pub fn semantic_summary(
+  expression : Expression,
+) -> Result[SemanticSummary, Diagnostic] {
+  semantic_summary_with_limits(expression, SemanticLimits::default())
+}
+
+///|
+pub fn semantic_summary_with_limits(
+  expression : Expression,
+  limits : SemanticLimits,
+) -> Result[SemanticSummary, Diagnostic] {
+  let manager = match new_decision_manager([expression], limits) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
   let root = compile_decision(manager, expression, [])
-  {
-    expression: expression.canonical(),
-    variables,
-    decision_nodes: manager.nodes.length(),
-    fingerprint: semantic_fingerprint_for(manager, root),
-    model: minimum_witness(manager, root),
+  match semantic_budget_error(manager) {
+    Some(error) => Err(error)
+    None =>
+      Ok({
+        expression: expression.canonical(),
+        variables: manager.variables,
+        decision_nodes: manager.nodes.length(),
+        operations: manager.operations[0],
+        fingerprint: semantic_fingerprint_for(manager, root),
+        model: minimum_witness(manager, root),
+      })
   }
 }
 
@@ -479,6 +653,8 @@ pub fn SemanticSummary::to_text(self : SemanticSummary) -> String {
     self.variables.length().to_string() +
     " nodes=" +
     self.decision_nodes.to_string() +
+    " operations=" +
+    self.operations.to_string() +
     "\nFINGERPRINT " +
     self.fingerprint,
   )
@@ -502,6 +678,8 @@ pub fn SemanticSummary::to_json(self : SemanticSummary) -> String {
   strings_json(self.variables) +
   ",\"decision_nodes\":" +
   self.decision_nodes.to_string() +
+  ",\"operations\":" +
+  self.operations.to_string() +
   ",\"fingerprint\":" +
   quote_json(self.fingerprint) +
   ",\"model\":" +
@@ -517,6 +695,7 @@ pub struct SemanticProof {
   holds : Bool
   variables : Array[String]
   decision_nodes : Int
+  operations : Int
   counterexample : TruthAssignment?
 } derive(Eq, @debug.Debug)
 
@@ -541,6 +720,11 @@ pub fn SemanticProof::decision_nodes(self : SemanticProof) -> Int {
 }
 
 ///|
+pub fn SemanticProof::operations(self : SemanticProof) -> Int {
+  self.operations
+}
+
+///|
 pub fn SemanticProof::counterexample(self : SemanticProof) -> TruthAssignment? {
   self.counterexample
 }
@@ -550,9 +734,12 @@ fn semantic_proof(
   relation : String,
   left : Expression,
   right : Expression,
-) -> SemanticProof {
-  let variables = ordered_variables([left, right])
-  let manager : DecisionManager = { variables, nodes: [] }
+  limits : SemanticLimits,
+) -> Result[SemanticProof, Diagnostic] {
+  let manager = match new_decision_manager([left, right], limits) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
   let apply_memo : Array[ApplyMemo] = []
   let left_root = compile_decision(manager, left, apply_memo)
   let right_root = compile_decision(manager, right, apply_memo)
@@ -562,21 +749,38 @@ fn semantic_proof(
     let negated = complement_decision(manager, right_root, [])
     apply_decisions(manager, BooleanAnd, left_root, negated, apply_memo)
   }
-  {
-    relation,
-    left: left.canonical(),
-    right: right.canonical(),
-    holds: failure == 0,
-    variables,
-    decision_nodes: manager.nodes.length(),
-    counterexample: minimum_witness(manager, failure),
+  match semantic_budget_error(manager) {
+    Some(error) => Err(error)
+    None =>
+      Ok({
+        relation,
+        left: left.canonical(),
+        right: right.canonical(),
+        holds: failure == 0,
+        variables: manager.variables,
+        decision_nodes: manager.nodes.length(),
+        operations: manager.operations[0],
+        counterexample: minimum_witness(manager, failure),
+      })
   }
 }
 
 ///|
 /// Prove that two expressions denote the same Boolean function.
-pub fn prove_equivalent(left : Expression, right : Expression) -> SemanticProof {
-  semantic_proof("equivalent", left, right)
+pub fn prove_equivalent(
+  left : Expression,
+  right : Expression,
+) -> Result[SemanticProof, Diagnostic] {
+  prove_equivalent_with_limits(left, right, SemanticLimits::default())
+}
+
+///|
+pub fn prove_equivalent_with_limits(
+  left : Expression,
+  right : Expression,
+  limits : SemanticLimits,
+) -> Result[SemanticProof, Diagnostic] {
+  semantic_proof("equivalent", left, right, limits)
 }
 
 ///|
@@ -584,8 +788,17 @@ pub fn prove_equivalent(left : Expression, right : Expression) -> SemanticProof 
 pub fn prove_implication(
   premise : Expression,
   conclusion : Expression,
-) -> SemanticProof {
-  semantic_proof("implies", premise, conclusion)
+) -> Result[SemanticProof, Diagnostic] {
+  prove_implication_with_limits(premise, conclusion, SemanticLimits::default())
+}
+
+///|
+pub fn prove_implication_with_limits(
+  premise : Expression,
+  conclusion : Expression,
+  limits : SemanticLimits,
+) -> Result[SemanticProof, Diagnostic] {
+  semantic_proof("implies", premise, conclusion, limits)
 }
 
 ///|
@@ -600,6 +813,8 @@ pub fn SemanticProof::to_text(self : SemanticProof) -> String {
     self.variables.length().to_string() +
     " nodes=" +
     self.decision_nodes.to_string() +
+    " operations=" +
+    self.operations.to_string() +
     "\nLEFT " +
     self.left +
     "\nRIGHT " +
@@ -631,6 +846,8 @@ pub fn SemanticProof::to_json(self : SemanticProof) -> String {
   strings_json(self.variables) +
   ",\"decision_nodes\":" +
   self.decision_nodes.to_string() +
+  ",\"operations\":" +
+  self.operations.to_string() +
   ",\"counterexample\":" +
   counterexample_json +
   "}"
@@ -814,9 +1031,24 @@ pub fn SemanticComparison::right_implies_left(
 pub fn compare_semantics(
   left : Expression,
   right : Expression,
-) -> SemanticComparison {
-  let forward = prove_implication(left, right)
-  let backward = prove_implication(right, left)
+) -> Result[SemanticComparison, Diagnostic] {
+  compare_semantics_with_limits(left, right, SemanticLimits::default())
+}
+
+///|
+pub fn compare_semantics_with_limits(
+  left : Expression,
+  right : Expression,
+  limits : SemanticLimits,
+) -> Result[SemanticComparison, Diagnostic] {
+  let forward = match prove_implication_with_limits(left, right, limits) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
+  let backward = match prove_implication_with_limits(right, left, limits) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
   let relation = if forward.holds() && backward.holds() {
     SemanticallyEquivalent
   } else if forward.holds() {
@@ -826,13 +1058,13 @@ pub fn compare_semantics(
   } else {
     SemanticallyIncomparable
   }
-  {
+  Ok({
     left: left.canonical(),
     right: right.canonical(),
     relation,
     left_implies_right: forward,
     right_implies_left: backward,
-  }
+  })
 }
 
 ///|
@@ -887,12 +1119,16 @@ priv struct RestrictionMemo {
 
 ///|
 fn restricted_memo(
+  manager : DecisionManager,
   memo : Array[RestrictionMemo],
   source : Int,
   variable : Int,
   value : Bool,
 ) -> Int? {
   for entry in memo {
+    if !consume_operation(manager) {
+      return Some(0)
+    }
     if entry.source == source &&
       entry.variable == variable &&
       entry.value == value {
@@ -910,10 +1146,13 @@ fn restrict_decision(
   value : Bool,
   memo : Array[RestrictionMemo],
 ) -> Int {
+  if !consume_operation(manager) {
+    return 0
+  }
   if root < 2 {
     return root
   }
-  match restricted_memo(memo, root, variable, value) {
+  match restricted_memo(manager, memo, root, variable, value) {
     Some(result) => return result
     None => ()
   }
@@ -1000,6 +1239,8 @@ pub struct InfluenceReport {
   influences : Array[AtomInfluence]
   relevant : Int
   redundant : Int
+  decision_nodes : Int
+  operations : Int
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -1020,16 +1261,38 @@ pub fn InfluenceReport::redundant(self : InfluenceReport) -> Int {
 }
 
 ///|
+pub fn InfluenceReport::decision_nodes(self : InfluenceReport) -> Int {
+  self.decision_nodes
+}
+
+///|
+pub fn InfluenceReport::operations(self : InfluenceReport) -> Int {
+  self.operations
+}
+
+///|
 /// Find whether changing each atom can change the expression. Relevant atoms
 /// include a minimum context and the two replayable assignments.
-pub fn analyze_influence(expression : Expression) -> InfluenceReport {
-  let variables = ordered_variables([expression])
-  let manager : DecisionManager = { variables, nodes: [] }
+pub fn analyze_influence(
+  expression : Expression,
+) -> Result[InfluenceReport, Diagnostic] {
+  analyze_influence_with_limits(expression, SemanticLimits::default())
+}
+
+///|
+pub fn analyze_influence_with_limits(
+  expression : Expression,
+  limits : SemanticLimits,
+) -> Result[InfluenceReport, Diagnostic] {
+  let manager = match new_decision_manager([expression], limits) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
   let root = compile_decision(manager, expression, [])
   let influences : Array[AtomInfluence] = []
   let mut relevant_count = 0
   let mut redundant_count = 0
-  for variable, atom in variables {
+  for variable, atom in manager.variables {
     let restriction_memo : Array[RestrictionMemo] = []
     let low = restrict_decision(
       manager, root, variable, false, restriction_memo,
@@ -1062,13 +1325,19 @@ pub fn analyze_influence(expression : Expression) -> InfluenceReport {
         true_result: expression.evaluate_assignment(when_true),
       })
     }
+    match semantic_budget_error(manager) {
+      Some(error) => return Err(error)
+      None => ()
+    }
   }
-  {
+  Ok({
     expression: expression.canonical(),
     influences,
     relevant: relevant_count,
     redundant: redundant_count,
-  }
+    decision_nodes: manager.nodes.length(),
+    operations: manager.operations[0],
+  })
 }
 
 ///|
@@ -1080,7 +1349,11 @@ pub fn InfluenceReport::to_text(self : InfluenceReport) -> String {
     " relevant=" +
     self.relevant.to_string() +
     " redundant=" +
-    self.redundant.to_string(),
+    self.redundant.to_string() +
+    " nodes=" +
+    self.decision_nodes.to_string() +
+    " operations=" +
+    self.operations.to_string(),
   )
   for influence in self.influences {
     output.write_string(
@@ -1114,6 +1387,10 @@ pub fn InfluenceReport::to_json(self : InfluenceReport) -> String {
     self.relevant.to_string() +
     ",\"redundant\":" +
     self.redundant.to_string() +
+    ",\"decision_nodes\":" +
+    self.decision_nodes.to_string() +
+    ",\"operations\":" +
+    self.operations.to_string() +
     ",\"atoms\":[",
   )
   for index, influence in self.influences {
