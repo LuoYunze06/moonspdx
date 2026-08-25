@@ -26,6 +26,10 @@ Supported semantic operations:
 - named batch claims for CI regression gates;
 - deterministic text and JSON output.
 
+All decision-diagram operations are resource bounded and return stable errors
+instead of a partial answer. The default budget may be adjusted through the
+library `SemanticLimits` API or CLI budget flags.
+
 Unsupported:
 
 - `LicenseRef-*` and `DocumentRef-*`;

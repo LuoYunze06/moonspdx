@@ -112,6 +112,7 @@ let right = @moonspdx.parse_expression(
   "MIT AND Apache-2.0 OR MIT AND BSD-3-Clause",
 ).unwrap()
 let proof = @moonspdx.prove_equivalent(left, right)
+  .unwrap()
 assert_true(proof.holds())
 
 let suite = @moonspdx.verify_claims(
@@ -121,6 +122,19 @@ assert_true(suite.all_proven())
 ```
 
 The generated public interface is in `pkg.generated.mbti`.
+
+All APIs that build a decision diagram return `Result` in v0.3. To customize
+the safety budget, construct `SemanticLimits` and call the corresponding
+`*_with_limits` function:
+
+```moonbit
+let limits = @moonspdx.SemanticLimits::new(16, 2048, 25000).unwrap()
+let proof = @moonspdx.prove_implication_with_limits(
+  left,
+  right,
+  limits,
+).unwrap()
+```
 
 ## Algorithm and limits
 
@@ -136,8 +150,12 @@ atom's semantic influence; relevant atoms include assignments before and after
 the atom is flipped, while absorbed atoms are reported as redundant.
 
 - Source expression limit: 4,096 characters.
+- Parser nesting limit: 64 parenthesis levels.
 - Claim suite limit: 128 records.
 - Complete truth tables: at most 10 distinct atoms.
+- Default semantic budget: 32 variables, 4,096 decision nodes, and 50,000
+  counted recursive/table-probe operations per proof or compilation.
+- CLI overrides: `--max-variables`, `--max-nodes`, and `--max-operations`.
 - Supported input profile: 44 common SPDX identifiers and 10 exceptions.
 - `LicenseRef-*`, `DocumentRef-*`, SPDX documents, and legal compatibility are unsupported.
 
@@ -159,7 +177,9 @@ moon test --target native
 ```
 
 GitHub Actions repeats all targets and compares real JavaScript/native CLI
-output with fixtures under `examples/`.
+output with fixtures under `examples/`. Tests also exhaustively compare ROBDD
+proofs against direct AST truth evaluation for a pairwise formula corpus and
+verify global minimum-counterexample cardinality.
 
 ## License
 

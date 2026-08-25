@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 - 2026-08-25
+
+- Bound every ROBDD compilation by configurable variable, decision-node, and
+  operation budgets with stable diagnostics for each exhausted resource.
+- Change semantic summary, proof, comparison, and influence APIs to return
+  `Result`, preventing complex input from bypassing resource failures.
+- Expose deterministic operation counts beside decision-node counts in text and
+  JSON results.
+- Add CLI budget flags: `--max-variables`, `--max-nodes`, and
+  `--max-operations`.
+- Add exhaustive AST-vs-ROBDD oracle tests over pairwise three-atom formulas and
+  verify that returned equivalence witnesses have globally minimum true count.
+- Expand negative tests for invalid limits and each resource-exhaustion path.
+- Reject more than 64 nested parentheses before recursive parsing.
+- Reject unknown, duplicate, missing-value, and stray CLI arguments through
+  per-command option schemas.
+
 ## 0.2.0 - 2026-08-17
 
 - Redesign the project around formal SPDX expression semantics after the v0.1

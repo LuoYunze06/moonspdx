@@ -1,6 +1,6 @@
 # Local Readiness Audit
 
-Date: 2026-08-17
+Date: 2026-08-25
 
 ## Environment
 
@@ -14,7 +14,7 @@ Date: 2026-08-17
 
 The v0.1 audit workflow was rejected for overlap with
 `clbbbb/moonbit-license-audit` and `liyun/moonseal`. Their fingerprints are now
-permanently registered in the hackathon Skill. The current v0.2 tree removes
+permanently registered in the hackathon Skill. The current v0.3 tree removes
 policy, inventory, obligation, drift, notice, and matrix modules. It does not
 scan repositories, audit release readiness, produce SBOM/SARIF/provenance, or
 recommend remediation.
@@ -26,12 +26,17 @@ two prior projects in core data, algorithm, output, and acceptance workflow.
 
 ## Local evidence
 
-- MoonBit files: 15; 2,997 physical lines and 2,548 effective lines under the
+- MoonBit files: 16; 3,652 physical lines and 3,129 effective lines under the
   local nonblank/non-doc-comment counter. The competition range is guidance;
   no generated padding was added after removing overlapping behavior.
 - `moon fmt --check`: passed.
 - strict `moon check` for wasm-gc, wasm, JavaScript, and native: passed.
-- 30 tests pass on wasm-gc, wasm, and JavaScript locally.
+- 41 tests pass on wasm-gc, wasm, and JavaScript locally. The suite includes
+  exhaustive AST-vs-ROBDD truth evaluation over all ordered pairs in a
+  three-atom formula corpus and checks global minimum witness cardinality.
+- Parser recursion is capped at 64 parenthesis levels. Symbolic work defaults
+  to 32 variables, 4,096 decision nodes, and 50,000 counted operations, with
+  dedicated tests for every resource diagnostic.
 - Native tests and native executable build require the GitHub Actions Ubuntu C
   compiler and are not claimed as local results.
 - JavaScript demo, inspect, proof-suite, and expected failed-proof fixtures

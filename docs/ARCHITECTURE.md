@@ -29,6 +29,19 @@ Bidirectional implication produces the four-way comparison relation. Influence
 analysis restricts each atom to false and true, compares the two cofactors, and
 uses their XOR to derive a context in which a relevant atom changes the result.
 
+## Resource budgets
+
+Every manager records distinct variables, allocated decision nodes, and counted
+work. Counted work includes recursive compile/apply/complement/restriction calls
+plus unique-table and memo-table probes, covering the implementation's linear
+lookup hotspots. Default limits are 32 variables, 4,096 nodes, and 50,000
+operations. Exceeding a budget returns `semantic.variable.limit`,
+`semantic.node.limit`, or `semantic.operation.limit`; partial diagrams are
+never exposed as proof results.
+
+Public APIs return `Result`. The default entry points use
+`SemanticLimits::default`; `*_with_limits` variants accept an explicit budget.
+
 ## Witnesses
 
 A failed proof keeps the failure diagram. Dynamic cost calculation assigns a
@@ -42,3 +55,10 @@ Tests replay every witness against the source AST to verify the claimed failure.
 Expressions are capped at 4,096 characters, suites at 128 claim records, and
 complete truth tables at 10 atoms. The core performs no filesystem or network
 access. JSON and text renderers are deterministic and expose stable diagnostics.
+
+## Correctness oracle
+
+The test suite evaluates a corpus of three-atom formulas under all eight truth
+assignments, compares every ordered formula pair with ROBDD equivalence and
+implication results, replays every witness against the source AST, and checks
+that equivalence witnesses use the globally minimum number of true atoms.
