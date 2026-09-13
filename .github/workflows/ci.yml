@@ -31,6 +31,10 @@ jobs:
           moon test --target wasm-gc
           moon test --target wasm
           moon test --target js
+      - name: Verify recorded maintenance workloads
+        run: |
+          moon build cmd/main --target js --release
+          python3 scripts/verify_benchmarks.py --cli _build/js/release/build/cmd/main/main.js
       - name: Exercise JavaScript CLI
         shell: bash
         run: |

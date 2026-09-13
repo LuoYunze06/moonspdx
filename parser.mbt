@@ -69,13 +69,13 @@ fn tokenize(source : String) -> Result[Array[Token], Diagnostic] {
           ),
         )
       }
-      tokens.push({ kind: LeftParen, offset: index })
+      tokens.push({ kind: LeftParen, offset: index, })
       index = index + 1
     } else if current == ')' {
       if parenthesis_depth > 0 {
         parenthesis_depth = parenthesis_depth - 1
       }
-      tokens.push({ kind: RightParen, offset: index })
+      tokens.push({ kind: RightParen, offset: index, })
       index = index + 1
     } else if is_identifier_char(current) {
       let start = index
@@ -84,7 +84,7 @@ fn tokenize(source : String) -> Result[Array[Token], Diagnostic] {
         output.write_char(chars[index])
         index = index + 1
       }
-      tokens.push({ kind: classify_word(output.to_string()), offset: start })
+      tokens.push({ kind: classify_word(output.to_string()), offset: start, })
     } else {
       return Err(
         Diagnostic::new(
@@ -97,7 +97,7 @@ fn tokenize(source : String) -> Result[Array[Token], Diagnostic] {
       )
     }
   }
-  tokens.push({ kind: End, offset: chars.length() })
+  tokens.push({ kind: End, offset: chars.length(), })
   Ok(tokens)
 }
 

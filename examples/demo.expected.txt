@@ -1,4 +1,4 @@
-PROOF relation=equivalent holds=true variables=3 nodes=7 operations=275
+PROOF relation=equivalent holds=true variables=3 nodes=7 operations=62
 LEFT MIT AND (Apache-2.0 OR BSD-3-Clause)
 RIGHT MIT AND Apache-2.0 OR MIT AND BSD-3-Clause
 COUNTEREXAMPLE none

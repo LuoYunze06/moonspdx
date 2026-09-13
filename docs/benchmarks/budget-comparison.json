@@ -1,0 +1,16 @@
+{
+  "case": "reverse-and-12",
+  "max_operations": 1000,
+  "results": [
+    {
+      "revision": "baseline",
+      "exit_code": 2,
+      "stdout": "semantic.operation.limit at expression: semantic compilation exceeds the operation budget (expected at most 1000 operations, got more than 1000)"
+    },
+    {
+      "revision": "optimized",
+      "exit_code": 0,
+      "stdout": "{\"relation\":\"equivalent\",\"holds\":true,\"left\":\"0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND Artistic-2.0 AND BSD-2-Clause AND BSD-3-Clause AND BSD-3-Clause-Clear AND BSL-1.0 AND BUSL-1.1 AND BlueOak-1.0.0\",\"right\":\"BlueOak-1.0.0 AND BUSL-1.1 AND BSL-1.0 AND BSD-3-Clause-Clear AND BSD-3-Clause AND BSD-2-Clause AND Artistic-2.0 AND Apache-2.0 AND AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD\",\"variables\":[\"0BSD\",\"AFL-3.0\",\"AGPL-3.0-only\",\"AGPL-3.0-or-later\",\"Apache-2.0\",\"Artistic-2.0\",\"BSD-2-Clause\",\"BSD-3-Clause\",\"BSD-3-Clause-Clear\",\"BSL-1.0\",\"BUSL-1.1\",\"BlueOak-1.0.0\"],\"decision_nodes\":78,\"operations\":498,\"counterexample\":null}"
+    }
+  ]
+}

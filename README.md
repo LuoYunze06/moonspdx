@@ -154,7 +154,8 @@ the atom is flipped, while absorbed atoms are reported as redundant.
 - Claim suite limit: 128 records.
 - Complete truth tables: at most 10 distinct atoms.
 - Default semantic budget: 32 variables, 4,096 decision nodes, and 50,000
-  counted recursive/table-probe operations per proof or compilation.
+  counted recursive/logical-table-lookup operations per proof or compilation.
+  These are implementation-specific work units, not CPU instructions or elapsed time.
 - CLI overrides: `--max-variables`, `--max-nodes`, and `--max-operations`.
 - Supported input profile: 44 common SPDX identifiers and 10 exceptions.
 - `LicenseRef-*`, `DocumentRef-*`, SPDX documents, and legal compatibility are unsupported.
@@ -180,6 +181,27 @@ GitHub Actions repeats all targets and compares real JavaScript/native CLI
 output with fixtures under `examples/`. Tests also exhaustively compare ROBDD
 proofs against direct AST truth evaluation for a pairwise formula corpus and
 verify global minimum-counterexample cardinality.
+
+## Maintenance evidence (September 2026)
+
+The existing proof API and SPDX profile are unchanged. The maintenance replaces
+linear unique/memo tables with keyed maps, shares reversed commutative requests,
+and avoids unnecessary recursion for terminal identities.
+
+- Tests: 41 baseline groups plus 8 new groups, including 576 formula pairs under
+  all 64 assignments over six atoms; both proof relations and minimum witnesses
+  are checked independently against AST evaluation.
+- Same 12 synthetic CLI workloads: all proof decisions and witnesses preserved.
+  The twelve-atom reverse-conjunction case falls from 18,668 counted work units
+  to 498; at a 1,000-unit budget the baseline rejects it and the new code proves it.
+- These are logical-work measurements, **not** a claim of 97% lower elapsed time
+  or superiority over other BDD engines. Process timings include Node startup.
+- [Method, raw measurements and reproduction](docs/MAINTENANCE_2026_09.md)
+
+```bash
+moon build cmd/main --target js --release
+python3 scripts/verify_benchmarks.py --cli _build/js/release/build/cmd/main/main.js
+```
 
 ## License
 

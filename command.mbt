@@ -16,17 +16,17 @@ pub fn CommandResult::output(self : CommandResult) -> String {
 
 ///|
 fn command_ok(output : String) -> CommandResult {
-  { exit_code: 0, output }
+  { exit_code: 0, output, }
 }
 
 ///|
 fn command_disproven(output : String) -> CommandResult {
-  { exit_code: 1, output }
+  { exit_code: 1, output, }
 }
 
 ///|
 fn command_error(output : String) -> CommandResult {
-  { exit_code: 2, output }
+  { exit_code: 2, output, }
 }
 
 ///|
