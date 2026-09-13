@@ -1,0 +1,307 @@
+{
+  "revision": "b47f5c2ffb4256f837f3d7355d71330676b64a25",
+  "target": "js release",
+  "node": "v24.14.0",
+  "repeat": 3,
+  "timing_note": "Includes process startup; not an in-process benchmark or cross-engine speed comparison.",
+  "results": [
+    {
+      "name": "reverse-and-4",
+      "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later",
+      "right": "AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later",
+        "right": "AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later"
+        ],
+        "decision_nodes": 10,
+        "operations": 582,
+        "counterexample": null
+      },
+      "median_process_ms": 45.228
+    },
+    {
+      "name": "reverse-or-4",
+      "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later",
+      "right": "AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later",
+        "right": "AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later"
+        ],
+        "decision_nodes": 10,
+        "operations": 582,
+        "counterexample": null
+      },
+      "median_process_ms": 54.917
+    },
+    {
+      "name": "pair-conjunction-4",
+      "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later)",
+      "right": "(AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later)",
+        "right": "(AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later"
+        ],
+        "decision_nodes": 8,
+        "operations": 433,
+        "counterexample": null
+      },
+      "median_process_ms": 43.337
+    },
+    {
+      "name": "reverse-and-8",
+      "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND Artistic-2.0 AND BSD-2-Clause AND BSD-3-Clause",
+      "right": "BSD-3-Clause AND BSD-2-Clause AND Artistic-2.0 AND Apache-2.0 AND AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND Artistic-2.0 AND BSD-2-Clause AND BSD-3-Clause",
+        "right": "BSD-3-Clause AND BSD-2-Clause AND Artistic-2.0 AND Apache-2.0 AND AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause"
+        ],
+        "decision_nodes": 36,
+        "operations": 4975,
+        "counterexample": null
+      },
+      "median_process_ms": 43.02
+    },
+    {
+      "name": "reverse-or-8",
+      "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later OR Apache-2.0 OR Artistic-2.0 OR BSD-2-Clause OR BSD-3-Clause",
+      "right": "BSD-3-Clause OR BSD-2-Clause OR Artistic-2.0 OR Apache-2.0 OR AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later OR Apache-2.0 OR Artistic-2.0 OR BSD-2-Clause OR BSD-3-Clause",
+        "right": "BSD-3-Clause OR BSD-2-Clause OR Artistic-2.0 OR Apache-2.0 OR AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause"
+        ],
+        "decision_nodes": 36,
+        "operations": 4975,
+        "counterexample": null
+      },
+      "median_process_ms": 43.736
+    },
+    {
+      "name": "pair-conjunction-8",
+      "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (Apache-2.0 OR Artistic-2.0) AND (BSD-2-Clause OR BSD-3-Clause)",
+      "right": "(BSD-2-Clause OR BSD-3-Clause) AND (Apache-2.0 OR Artistic-2.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (Apache-2.0 OR Artistic-2.0) AND (BSD-2-Clause OR BSD-3-Clause)",
+        "right": "(BSD-2-Clause OR BSD-3-Clause) AND (Apache-2.0 OR Artistic-2.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause"
+        ],
+        "decision_nodes": 24,
+        "operations": 3609,
+        "counterexample": null
+      },
+      "median_process_ms": 42.162
+    },
+    {
+      "name": "reverse-and-12",
+      "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND Artistic-2.0 AND BSD-2-Clause AND BSD-3-Clause AND BSD-3-Clause-Clear AND BSL-1.0 AND BUSL-1.1 AND BlueOak-1.0.0",
+      "right": "BlueOak-1.0.0 AND BUSL-1.1 AND BSL-1.0 AND BSD-3-Clause-Clear AND BSD-3-Clause AND BSD-2-Clause AND Artistic-2.0 AND Apache-2.0 AND AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD AND AFL-3.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND Artistic-2.0 AND BSD-2-Clause AND BSD-3-Clause AND BSD-3-Clause-Clear AND BSL-1.0 AND BUSL-1.1 AND BlueOak-1.0.0",
+        "right": "BlueOak-1.0.0 AND BUSL-1.1 AND BSL-1.0 AND BSD-3-Clause-Clear AND BSD-3-Clause AND BSD-2-Clause AND Artistic-2.0 AND Apache-2.0 AND AGPL-3.0-or-later AND AGPL-3.0-only AND AFL-3.0 AND 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause",
+          "BSD-3-Clause-Clear",
+          "BSL-1.0",
+          "BUSL-1.1",
+          "BlueOak-1.0.0"
+        ],
+        "decision_nodes": 78,
+        "operations": 18668,
+        "counterexample": null
+      },
+      "median_process_ms": 52.428
+    },
+    {
+      "name": "reverse-or-12",
+      "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later OR Apache-2.0 OR Artistic-2.0 OR BSD-2-Clause OR BSD-3-Clause OR BSD-3-Clause-Clear OR BSL-1.0 OR BUSL-1.1 OR BlueOak-1.0.0",
+      "right": "BlueOak-1.0.0 OR BUSL-1.1 OR BSL-1.0 OR BSD-3-Clause-Clear OR BSD-3-Clause OR BSD-2-Clause OR Artistic-2.0 OR Apache-2.0 OR AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "0BSD OR AFL-3.0 OR AGPL-3.0-only OR AGPL-3.0-or-later OR Apache-2.0 OR Artistic-2.0 OR BSD-2-Clause OR BSD-3-Clause OR BSD-3-Clause-Clear OR BSL-1.0 OR BUSL-1.1 OR BlueOak-1.0.0",
+        "right": "BlueOak-1.0.0 OR BUSL-1.1 OR BSL-1.0 OR BSD-3-Clause-Clear OR BSD-3-Clause OR BSD-2-Clause OR Artistic-2.0 OR Apache-2.0 OR AGPL-3.0-or-later OR AGPL-3.0-only OR AFL-3.0 OR 0BSD",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause",
+          "BSD-3-Clause-Clear",
+          "BSL-1.0",
+          "BUSL-1.1",
+          "BlueOak-1.0.0"
+        ],
+        "decision_nodes": 78,
+        "operations": 18668,
+        "counterexample": null
+      },
+      "median_process_ms": 43.97
+    },
+    {
+      "name": "pair-conjunction-12",
+      "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (Apache-2.0 OR Artistic-2.0) AND (BSD-2-Clause OR BSD-3-Clause) AND (BSD-3-Clause-Clear OR BSL-1.0) AND (BUSL-1.1 OR BlueOak-1.0.0)",
+      "right": "(BUSL-1.1 OR BlueOak-1.0.0) AND (BSD-3-Clause-Clear OR BSL-1.0) AND (BSD-2-Clause OR BSD-3-Clause) AND (Apache-2.0 OR Artistic-2.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "(0BSD OR AFL-3.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (Apache-2.0 OR Artistic-2.0) AND (BSD-2-Clause OR BSD-3-Clause) AND (BSD-3-Clause-Clear OR BSL-1.0) AND (BUSL-1.1 OR BlueOak-1.0.0)",
+        "right": "(BUSL-1.1 OR BlueOak-1.0.0) AND (BSD-3-Clause-Clear OR BSL-1.0) AND (BSD-2-Clause OR BSD-3-Clause) AND (Apache-2.0 OR Artistic-2.0) AND (AGPL-3.0-only OR AGPL-3.0-or-later) AND (0BSD OR AFL-3.0)",
+        "variables": [
+          "0BSD",
+          "AFL-3.0",
+          "AGPL-3.0-only",
+          "AGPL-3.0-or-later",
+          "Apache-2.0",
+          "Artistic-2.0",
+          "BSD-2-Clause",
+          "BSD-3-Clause",
+          "BSD-3-Clause-Clear",
+          "BSL-1.0",
+          "BUSL-1.1",
+          "BlueOak-1.0.0"
+        ],
+        "decision_nodes": 48,
+        "operations": 11981,
+        "counterexample": null
+      },
+      "median_process_ms": 43.55
+    },
+    {
+      "name": "repeated-subexpression-40",
+      "left": "(MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0) OR (MIT AND Apache-2.0)",
+      "right": "Apache-2.0 AND MIT",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0 OR MIT AND Apache-2.0",
+        "right": "Apache-2.0 AND MIT",
+        "variables": [
+          "Apache-2.0",
+          "MIT"
+        ],
+        "decision_nodes": 3,
+        "operations": 833,
+        "counterexample": null
+      },
+      "median_process_ms": 57.503
+    },
+    {
+      "name": "distributivity",
+      "left": "MIT AND (Apache-2.0 OR BSD-3-Clause)",
+      "right": "MIT AND Apache-2.0 OR MIT AND BSD-3-Clause",
+      "exit_code": 0,
+      "result": {
+        "relation": "equivalent",
+        "holds": true,
+        "left": "MIT AND (Apache-2.0 OR BSD-3-Clause)",
+        "right": "MIT AND Apache-2.0 OR MIT AND BSD-3-Clause",
+        "variables": [
+          "Apache-2.0",
+          "BSD-3-Clause",
+          "MIT"
+        ],
+        "decision_nodes": 7,
+        "operations": 275,
+        "counterexample": null
+      },
+      "median_process_ms": 43.431
+    },
+    {
+      "name": "negative-witness",
+      "left": "MIT OR Apache-2.0",
+      "right": "MIT AND Apache-2.0",
+      "exit_code": 1,
+      "result": {
+        "relation": "equivalent",
+        "holds": false,
+        "left": "MIT OR Apache-2.0",
+        "right": "MIT AND Apache-2.0",
+        "variables": [
+          "Apache-2.0",
+          "MIT"
+        ],
+        "decision_nodes": 6,
+        "operations": 91,
+        "counterexample": {
+          "Apache-2.0": false,
+          "MIT": true
+        }
+      },
+      "median_process_ms": 43.3
+    }
+  ]
+}
