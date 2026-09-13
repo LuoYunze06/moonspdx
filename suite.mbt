@@ -164,7 +164,7 @@ pub fn parse_claims(
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      claims.push({ name: fields[0], relation, left, right })
+      claims.push({ name: fields[0], relation, left, right, })
     }
   }
   if claims.is_empty() {
@@ -257,9 +257,9 @@ pub fn verify_claims_with_limits(
     } else {
       failed = failed + 1
     }
-    results.push({ claim, proof })
+    results.push({ claim, proof, })
   }
-  Ok({ results, passed, failed })
+  Ok({ results, passed, failed, })
 }
 
 ///|

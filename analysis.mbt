@@ -45,7 +45,13 @@ fn capped_product(left : Int, right : Int) -> Int {
 pub fn Expression::stats(self : Expression) -> ExpressionStats {
   match self {
     Atom(_) =>
-      { atoms: 1, and_operators: 0, or_operators: 0, depth: 1, alternatives: 1 }
+      {
+        atoms: 1,
+        and_operators: 0,
+        or_operators: 0,
+        depth: 1,
+        alternatives: 1,
+      }
     And(left, right) => {
       let a = left.stats()
       let b = right.stats()

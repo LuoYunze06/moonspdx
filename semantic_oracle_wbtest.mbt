@@ -5,7 +5,7 @@ fn oracle_assignments(variables : Array[String]) -> Array[TruthAssignment] {
   for mask = 0; mask < combinations; mask = mask + 1 {
     let values : Array[TruthValue] = []
     for index, atom in variables {
-      values.push({ atom, value: (mask & (1 << index)) != 0 })
+      values.push({ atom, value: (mask & (1 << index)) != 0, })
     }
     assignments.push({ values, })
   }

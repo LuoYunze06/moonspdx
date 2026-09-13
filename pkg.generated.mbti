@@ -278,4 +278,3 @@ pub fn TruthValue::value(Self) -> Bool
 // Type aliases
 
 // Traits
-

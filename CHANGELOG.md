@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — ROBDD maintenance
+
+- Index unique nodes and apply/complement/restriction caches with exact keyed maps; normalize commutative apply keys and reduce terminal operations.
+- Add eight test groups for six-atom exhaustive proof/witness/influence checks, table isolation and budget boundaries (49 total).
+- Retain 12 baseline/optimized CLI workloads and wire counter/output verification into CI.
+- Successful semantic results and the public API are preserved; numeric work/node counters and exact budget cutoffs change. No package version has been published for these changes.
+
+
 ## 0.3.0 - 2026-08-25
 
 - Bound every ROBDD compilation by configurable variable, decision-node, and

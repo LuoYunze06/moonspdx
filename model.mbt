@@ -9,7 +9,7 @@ pub fn LicenseAtom::new(
   id : String,
   exception? : String? = None,
 ) -> LicenseAtom {
-  { id, exception }
+  { id, exception, }
 }
 
 ///|
