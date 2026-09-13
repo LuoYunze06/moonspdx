@@ -95,12 +95,13 @@ priv struct DecisionNode {
   variable : Int
   low : Int
   high : Int
-} derive(Eq)
+} derive(Eq, Hash)
 
 ///|
 priv struct DecisionManager {
   variables : Array[String]
   nodes : Array[DecisionNode]
+  unique : Map[DecisionNode, Int]
   max_nodes : Int
   max_operations : Int
   operations : Array[Int]
@@ -117,7 +118,7 @@ pub struct SemanticLimits {
 
 ///|
 pub fn SemanticLimits::default() -> SemanticLimits {
-  { max_variables: 32, max_nodes: 4096, max_operations: 50000 }
+  { max_variables: 32, max_nodes: 4096, max_operations: 50000, }
 }
 
 ///|
@@ -141,7 +142,7 @@ pub fn SemanticLimits::new(
       ),
     )
   } else {
-    Ok({ max_variables, max_nodes, max_operations })
+    Ok({ max_variables, max_nodes, max_operations, })
   }
 }
 
@@ -165,21 +166,14 @@ priv enum BooleanOperation {
   BooleanAnd
   BooleanOr
   BooleanXor
-} derive(Eq)
+} derive(Eq, Hash)
 
 ///|
 priv struct ApplyMemo {
   operation : BooleanOperation
   left : Int
   right : Int
-  result : Int
-}
-
-///|
-priv struct ComplementMemo {
-  source : Int
-  result : Int
-}
+} derive(Eq, Hash)
 
 ///|
 fn contains_text(values : Array[String], target : String) -> Bool {
@@ -242,6 +236,7 @@ fn new_decision_manager(
     Ok({
       variables,
       nodes: [],
+      unique: Map::Map([]),
       max_nodes: limits.max_nodes,
       max_operations: limits.max_operations,
       operations: [0],
@@ -327,21 +322,23 @@ fn make_node(
   if low == high {
     return low
   }
-  let wanted : DecisionNode = { variable, low, high }
-  for index, node in manager.nodes {
-    if !consume_operation(manager) {
-      return 0
-    }
-    if node == wanted {
-      return index + 2
-    }
+  let wanted : DecisionNode = { variable, low, high, }
+  // Count one logical table lookup, not runtime hash collision probes.
+  if !consume_operation(manager) {
+    return 0
+  }
+  match manager.unique.get(wanted) {
+    Some(id) => return id
+    None => ()
   }
   if manager.nodes.length() >= manager.max_nodes {
     manager.exceeded[0] = "nodes"
     return 0
   }
   manager.nodes.push(wanted)
-  manager.nodes.length() + 1
+  let id = manager.nodes.length() + 1
+  manager.unique.set(wanted, id)
+  id
 }
 
 ///|
@@ -365,33 +362,12 @@ fn terminal_operation(
 }
 
 ///|
-fn memoized_apply(
-  manager : DecisionManager,
-  memo : Array[ApplyMemo],
-  operation : BooleanOperation,
-  left : Int,
-  right : Int,
-) -> Int? {
-  for entry in memo {
-    if !consume_operation(manager) {
-      return Some(0)
-    }
-    if entry.operation == operation &&
-      entry.left == left &&
-      entry.right == right {
-      return Some(entry.result)
-    }
-  }
-  None
-}
-
-///|
 fn apply_decisions(
   manager : DecisionManager,
   operation : BooleanOperation,
   left : Int,
   right : Int,
-  memo : Array[ApplyMemo],
+  memo : Map[ApplyMemo, Int],
 ) -> Int {
   if !consume_operation(manager) {
     return 0
@@ -399,7 +375,40 @@ fn apply_decisions(
   if left < 2 && right < 2 {
     return terminal_operation(operation, left, right)
   }
-  match memoized_apply(manager, memo, operation, left, right) {
+  // All supported operations commute. A sorted key shares reversed requests.
+  let first = if left <= right { left } else { right }
+  let second = if left <= right { right } else { left }
+  match operation {
+    BooleanAnd => {
+      if first == 0 {
+        return 0
+      }
+      if first == 1 || first == second {
+        return second
+      }
+    }
+    BooleanOr => {
+      if first == 0 || first == second {
+        return second
+      }
+      if first == 1 {
+        return 1
+      }
+    }
+    BooleanXor => {
+      if first == second {
+        return 0
+      }
+      if first == 0 {
+        return second
+      }
+    }
+  }
+  let key : ApplyMemo = { operation, left: first, right: second, }
+  if !consume_operation(manager) {
+    return 0
+  }
+  match memo.get(key) {
     Some(result) => return result
     None => ()
   }
@@ -429,7 +438,9 @@ fn apply_decisions(
   let low = apply_decisions(manager, operation, left_low, right_low, memo)
   let high = apply_decisions(manager, operation, left_high, right_high, memo)
   let result = make_node(manager, top, low, high)
-  memo.push({ operation, left, right, result })
+  if manager.exceeded[0].is_empty() {
+    memo.set(key, result)
+  }
   result
 }
 
@@ -437,7 +448,7 @@ fn apply_decisions(
 fn compile_decision(
   manager : DecisionManager,
   expression : Expression,
-  memo : Array[ApplyMemo],
+  memo : Map[ApplyMemo, Int],
 ) -> Int {
   if !consume_operation(manager) {
     return 0
@@ -464,7 +475,7 @@ fn compile_decision(
 fn complement_decision(
   manager : DecisionManager,
   source : Int,
-  memo : Array[ComplementMemo],
+  memo : Map[Int, Int],
 ) -> Int {
   if !consume_operation(manager) {
     return 0
@@ -475,19 +486,20 @@ fn complement_decision(
   if source == 1 {
     return 0
   }
-  for entry in memo {
-    if !consume_operation(manager) {
-      return 0
-    }
-    if entry.source == source {
-      return entry.result
-    }
+  if !consume_operation(manager) {
+    return 0
+  }
+  match memo.get(source) {
+    Some(result) => return result
+    None => ()
   }
   let node = decision_node(manager, source)
   let low = complement_decision(manager, node.low, memo)
   let high = complement_decision(manager, node.high, memo)
   let result = make_node(manager, node.variable, low, high)
-  memo.push({ source, result })
+  if manager.exceeded[0].is_empty() {
+    memo.set(source, result)
+  }
   result
 }
 
@@ -538,7 +550,7 @@ fn minimum_witness(manager : DecisionManager, root : Int) -> TruthAssignment? {
   } else {
     let values : Array[TruthValue] = []
     for index, atom in manager.variables {
-      values.push({ atom, value: selected[index] })
+      values.push({ atom, value: selected[index], })
     }
     Some({ values, })
   }
@@ -628,7 +640,7 @@ pub fn semantic_summary_with_limits(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let root = compile_decision(manager, expression, [])
+  let root = compile_decision(manager, expression, Map::Map([]))
   match semantic_budget_error(manager) {
     Some(error) => Err(error)
     None =>
@@ -740,13 +752,13 @@ fn semantic_proof(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let apply_memo : Array[ApplyMemo] = []
+  let apply_memo : Map[ApplyMemo, Int] = Map::Map([])
   let left_root = compile_decision(manager, left, apply_memo)
   let right_root = compile_decision(manager, right, apply_memo)
   let failure = if relation == "equivalent" {
     apply_decisions(manager, BooleanXor, left_root, right_root, apply_memo)
   } else {
-    let negated = complement_decision(manager, right_root, [])
+    let negated = complement_decision(manager, right_root, Map::Map([]))
     apply_decisions(manager, BooleanAnd, left_root, negated, apply_memo)
   }
   match semantic_budget_error(manager) {
@@ -897,10 +909,13 @@ fn enumerate_truth_rows(
   if index == variables.length() {
     let values : Array[TruthValue] = []
     for value_index, atom in variables {
-      values.push({ atom, value: selected[value_index] })
+      values.push({ atom, value: selected[value_index], })
     }
     let assignment : TruthAssignment = { values, }
-    rows.push({ assignment, result: expression.evaluate_assignment(assignment) })
+    rows.push({
+      assignment,
+      result: expression.evaluate_assignment(assignment),
+    })
     return
   }
   selected[index] = false
@@ -932,7 +947,7 @@ pub fn truth_table(expression : Expression) -> Result[TruthTable, Diagnostic] {
     0,
     rows,
   )
-  Ok({ expression: expression.canonical(), variables, rows })
+  Ok({ expression: expression.canonical(), variables, rows, })
 }
 
 ///|
@@ -1114,29 +1129,7 @@ priv struct RestrictionMemo {
   source : Int
   variable : Int
   value : Bool
-  result : Int
-}
-
-///|
-fn restricted_memo(
-  manager : DecisionManager,
-  memo : Array[RestrictionMemo],
-  source : Int,
-  variable : Int,
-  value : Bool,
-) -> Int? {
-  for entry in memo {
-    if !consume_operation(manager) {
-      return Some(0)
-    }
-    if entry.source == source &&
-      entry.variable == variable &&
-      entry.value == value {
-      return Some(entry.result)
-    }
-  }
-  None
-}
+} derive(Eq, Hash)
 
 ///|
 fn restrict_decision(
@@ -1144,7 +1137,7 @@ fn restrict_decision(
   root : Int,
   variable : Int,
   value : Bool,
-  memo : Array[RestrictionMemo],
+  memo : Map[RestrictionMemo, Int],
 ) -> Int {
   if !consume_operation(manager) {
     return 0
@@ -1152,7 +1145,11 @@ fn restrict_decision(
   if root < 2 {
     return root
   }
-  match restricted_memo(manager, memo, root, variable, value) {
+  let key : RestrictionMemo = { source: root, variable, value, }
+  if !consume_operation(manager) {
+    return 0
+  }
+  match memo.get(key) {
     Some(result) => return result
     None => ()
   }
@@ -1170,7 +1167,9 @@ fn restrict_decision(
     let high = restrict_decision(manager, node.high, variable, value, memo)
     make_node(manager, node.variable, low, high)
   }
-  memo.push({ source: root, variable, value, result })
+  if manager.exceeded[0].is_empty() {
+    memo.set(key, result)
+  }
   result
 }
 
@@ -1184,7 +1183,7 @@ fn assignment_overriding(
   for entry in assignment.values {
     values.push(
       if entry.atom == atom {
-        { atom: entry.atom, value }
+        { atom: entry.atom, value, }
       } else {
         entry
       },
@@ -1288,12 +1287,12 @@ pub fn analyze_influence_with_limits(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let root = compile_decision(manager, expression, [])
+  let root = compile_decision(manager, expression, Map::Map([]))
   let influences : Array[AtomInfluence] = []
   let mut relevant_count = 0
   let mut redundant_count = 0
   for variable, atom in manager.variables {
-    let restriction_memo : Array[RestrictionMemo] = []
+    let restriction_memo : Map[RestrictionMemo, Int] = Map::Map([])
     let low = restrict_decision(
       manager, root, variable, false, restriction_memo,
     )
@@ -1312,7 +1311,13 @@ pub fn analyze_influence_with_limits(
       })
     } else {
       relevant_count = relevant_count + 1
-      let difference = apply_decisions(manager, BooleanXor, low, high, [])
+      let difference = apply_decisions(
+        manager,
+        BooleanXor,
+        low,
+        high,
+        Map::Map([]),
+      )
       let context = minimum_witness(manager, difference).unwrap()
       let when_false = assignment_overriding(context, atom, false)
       let when_true = assignment_overriding(context, atom, true)
